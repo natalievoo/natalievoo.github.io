@@ -1,0 +1,106 @@
+/* Colours and sizes in one place: change these to restyle the whole site */
+:root {
+    --bg: #0d0f1a;
+    --text: #f2f3f8;
+    --muted: #9aa0b8;
+    --pink: #ff6fb5;
+    --violet: #8b7bff;
+    --teal: #3fd8c2;
+    --card: rgb(255 255 255 / 0.06);
+    --line: rgb(255 255 255 / 0.12);
+}
+
+* { box-sizing: border-box; margin: 0; }
+html { scroll-behavior: smooth; }
+body {
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+a { color: var(--teal); }
+
+/* ─── Background: three blurred blobs drifting slowly ─── */
+.blobs { position: fixed; inset: 0; z-index: -2; overflow: hidden; filter: blur(80px); opacity: 0.55; }
+.blob { position: absolute; width: 42vmax; height: 42vmax; border-radius: 50%; animation: drift 22s ease-in-out infinite alternate; }
+.b1 { top: -10%; left: -10%; background: var(--violet); }
+.b2 { bottom: -15%; right: -10%; background: var(--pink); animation-duration: 28s; }
+.b3 { top: 30%; left: 40%; width: 30vmax; height: 30vmax; background: var(--teal); animation-duration: 18s; }
+@keyframes drift {
+    to { transform: translate(8vw, 6vh) scale(1.15) rotate(30deg); }
+}
+
+/* The glow under the mouse (script.js moves it) */
+.glow {
+    position: fixed; z-index: -1; left: 0; top: 0;
+    width: 30rem; height: 30rem; margin: -15rem 0 0 -15rem; border-radius: 50%;
+    background: radial-gradient(circle, rgb(255 255 255 / 0.10), transparent 60%);
+    pointer-events: none;
+    transform: translate(var(--x, 50vw), var(--y, 50vh));
+}
+
+/* ─── The hero ─── */
+.hero {
+    display: grid; place-content: center; justify-items: center; gap: 1rem;
+    min-height: 100vh; padding: 2rem; text-align: center;
+}
+.kicker { color: var(--muted); font-size: 1.125rem; }
+.name {
+    font-size: clamp(3rem, 12vw, 9rem); font-weight: 800; line-height: 1; letter-spacing: -0.04em;
+    background: linear-gradient(90deg, var(--pink), var(--violet), var(--teal), var(--pink));
+    background-size: 300% 100%;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: shimmer 8s linear infinite;
+}
+@keyframes shimmer { to { background-position: 300% 0; } }
+/* Each letter of the name drops in, one after another (script.js splits
+   them). The gradient moves onto the letters, each shifted by where the
+   letter sits (--left, --w from script.js), so it runs as one across the name */
+.name.is-split { background: none; animation: none; }
+.name .ch {
+    display: inline-block; opacity: 0; transform: translateY(0.6em) rotate(8deg);
+    background: linear-gradient(90deg, var(--pink), var(--violet), var(--teal), var(--pink));
+    background-size: calc(var(--w, 10em) * 3) 100%;
+    background-position: calc(-1 * var(--left, 0px)) 0;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: drop 0.7s cubic-bezier(.2,.8,.2,1.2) forwards, shimmer-ch 8s linear infinite;
+    animation-delay: calc(var(--i) * 60ms), 0s;
+}
+@keyframes shimmer-ch {
+    from { background-position: calc(-1 * var(--left, 0px)) 0; }
+    to { background-position: calc(var(--w, 10em) * 3 - var(--left, 0px)) 0; }
+}
+@keyframes drop { to { opacity: 1; transform: none; } }
+.tagline { max-width: 32rem; color: var(--muted); font-size: 1.25rem; }
+.scroll-hint { margin-top: 3rem; color: var(--muted); font-size: 0.875rem; text-decoration: none; letter-spacing: 0.2em; text-transform: uppercase; animation: bob 2s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(8px); } }
+
+/* ─── Sections ─── */
+.section { max-width: 60rem; margin: 0 auto; padding: 6rem 1.5rem; }
+.section h2 { margin-bottom: 1.5rem; font-size: clamp(2rem, 5vw, 3rem); letter-spacing: -0.02em; }
+.section > p { max-width: 38rem; color: var(--muted); font-size: 1.125rem; }
+
+.cards { display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
+.card {
+    padding: 1.75rem; border: 1px solid var(--line); border-radius: 1.25rem; background: var(--card);
+    backdrop-filter: blur(10px);
+    transition: transform 0.2s ease-out, border-color 0.2s;
+    transform: perspective(800px) rotateX(var(--rx, 0)) rotateY(var(--ry, 0));
+}
+.card:hover { border-color: var(--violet); }
+.card h3 { margin-bottom: 0.5rem; }
+.card p { color: var(--muted); }
+
+.foot { padding: 3rem 1.5rem; color: var(--muted); font-size: 0.875rem; text-align: center; }
+
+/* ─── Fade-up as things scroll into view (script.js adds .in) ─── */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.8s ease, transform 0.8s ease; }
+.reveal.in { opacity: 1; transform: none; }
+
+/* People who ask their device for less motion get the calm version */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .reveal, .name .ch { opacity: 1; transform: none; }
+}
