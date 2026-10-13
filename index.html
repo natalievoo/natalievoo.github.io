@@ -3,61 +3,85 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Natalie Voo</title>
-    <meta name="description" content="Natalie Voo's personal website.">
+    <title>Natalie Voo 邬欣汝</title>
+    <meta name="description" content="Natalie Voo's personal website. Move your cursor to paint.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+    <!-- The brush font, cut down to just the characters the site uses -->
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&text=邬欣汝印旅读写作生你好&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- The soft colour blobs drifting behind everything -->
-    <div class="blobs" aria-hidden="true">
-        <span class="blob b1"></span>
-        <span class="blob b2"></span>
-        <span class="blob b3"></span>
-    </div>
-    <!-- The glow that follows the mouse -->
-    <div class="glow" aria-hidden="true"></div>
+    <!-- The painting: ink that stays (paint) and ripples that fade (water) -->
+    <canvas id="paint" aria-hidden="true"></canvas>
+    <canvas id="water" aria-hidden="true"></canvas>
+
+    <!-- Wet ink: roughens the stroke edges, then softens and firms them up again -->
+    <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+        <filter id="sumi" x="-5%" y="-5%" width="110%" height="110%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="4" result="grain"/>
+            <feDisplacementMap in="SourceGraphic" in2="grain" scale="14" result="rough"/>
+            <feGaussianBlur in="rough" stdDeviation="2.2" result="soft"/>
+            <feComponentTransfer in="soft"><feFuncA type="table" tableValues="0 0 0.9 0.95 1"/></feComponentTransfer>
+        </filter>
+    </svg>
 
     <header class="hero">
-        <p class="kicker reveal">Hello, I'm</p>
-        <h1 class="name" data-split>Natalie Voo</h1>
-        <p class="tagline reveal">Write one line about yourself here.</p>
-        <a class="scroll-hint reveal" href="#about">Scroll</a>
+        <div class="name-row">
+            <h1 class="hanzi" data-hanzi="邬欣汝" aria-label="邬欣汝, Natalie Voo"></h1>
+            <div class="seal" aria-hidden="true"><span>邬</span><span>欣</span><span>汝</span><span>印</span></div>
+        </div>
+        <p class="latin">Natalie Voo</p>
+        <p class="greet" aria-live="off"><span class="greet-word">Hello</span></p>
+        <a class="scroll-hint" href="#about">Scroll</a>
     </header>
 
     <main>
-        <section id="about" class="section">
-            <h2 class="reveal">About</h2>
-            <p class="reveal">A few sentences about who you are and what you like. Edit this text in index.html.</p>
+        <section id="about" class="intro bleed">
+            <p class="lede">I work with data, build small things on the side, and collect places, books and languages along the way.</p>
         </section>
 
-        <section class="section">
-            <h2 class="reveal">Things I've made</h2>
-            <div class="cards">
-                <article class="card reveal" data-tilt>
-                    <h3>Project one</h3>
-                    <p>A short description.</p>
-                </article>
-                <article class="card reveal" data-tilt>
-                    <h3>Project two</h3>
-                    <p>A short description.</p>
-                </article>
-                <article class="card reveal" data-tilt>
-                    <h3>Project three</h3>
-                    <p>A short description.</p>
-                </article>
-            </div>
-        </section>
-
-        <section class="section">
-            <h2 class="reveal">Say hi</h2>
-            <p class="reveal"><a href="https://github.com/natalievoo">GitHub</a></p>
-        </section>
+        <nav class="doors bleed" aria-label="Sections">
+            <a class="door" aria-disabled="true">
+                <span class="door-zi" aria-hidden="true">旅</span>
+                <span class="door-title">Travel</span>
+                <span class="door-soon">Soon</span>
+            </a>
+            <a class="door" aria-disabled="true">
+                <span class="door-zi" aria-hidden="true">读</span>
+                <span class="door-title">Reading</span>
+                <span class="door-soon">Soon</span>
+            </a>
+            <a class="door" aria-disabled="true">
+                <span class="door-zi" aria-hidden="true">写</span>
+                <span class="door-title">Writing</span>
+                <span class="door-soon">Soon</span>
+            </a>
+            <a class="door" aria-disabled="true">
+                <span class="door-zi" aria-hidden="true">作</span>
+                <span class="door-title">Projects</span>
+                <span class="door-soon">Soon</span>
+            </a>
+            <a class="door" aria-disabled="true">
+                <span class="door-zi" aria-hidden="true">生</span>
+                <span class="door-title">Life</span>
+                <span class="door-soon">Soon</span>
+            </a>
+        </nav>
     </main>
 
-    <footer class="foot">© <span data-year></span> Natalie Voo</footer>
+    <footer class="foot">
+        <div class="pisces">
+            <svg class="fish" viewBox="-40 -40 80 80" aria-hidden="true">
+                <path class="cord" d="M-14 16 C-14 34, 14 34, 14 -16" />
+                <g class="fish-a"><path d="M-14 -24 C-6 -16 -6 2 -14 10 C-22 2 -22 -16 -14 -24 Z M-14 10 L-19 18 L-9 18 Z" /></g>
+                <g class="fish-b"><path d="M14 24 C6 16 6 -2 14 -10 C22 -2 22 16 14 24 Z M14 -10 L9 -18 L19 -18 Z" /></g>
+            </svg>
+        </div>
+        <p class="credit">© <span data-year></span> Natalie Voo</p>
+    </footer>
+
 
     <script src="script.js"></script>
 </body>

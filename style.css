@@ -1,106 +1,167 @@
-/* Colours and sizes in one place: change these to restyle the whole site */
+/* Colours and sizes in one place. The palette comes from
+   A Thousand Li of Rivers and Mountains (Wang Ximeng, 1113) */
 :root {
-    --bg: #0d0f1a;
-    --text: #f2f3f8;
-    --muted: #9aa0b8;
-    --pink: #ff6fb5;
-    --violet: #8b7bff;
-    --teal: #3fd8c2;
-    --card: rgb(255 255 255 / 0.06);
-    --line: rgb(255 255 255 / 0.12);
+    --paper: #f4efe4;
+    --ink: #1f2a30;
+    --ink-soft: #3b464b;
+    --muted: #5f655f;
+    --azurite: #2f5d8c;
+    --malachite: #3d8b7d;
+    --stone: #7fb3a3;
+    --ochre: #c79a5b;
+    --seal: #b3362b;
+    --line: rgb(31 42 48 / 0.14);
+    --ease-out: cubic-bezier(.22, .61, .36, 1);
+    --ease-in-out: cubic-bezier(.65, 0, .35, 1);
+    --serif-display: 'Cormorant Garamond', 'Times New Roman', serif;
+    --serif: 'Newsreader', Georgia, serif;
+    --brush: 'Ma Shan Zheng', 'KaiTi', 'STKaiti', serif;
 }
 
 * { box-sizing: border-box; margin: 0; }
 html { scroll-behavior: smooth; }
 body {
     min-height: 100vh;
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Inter', system-ui, sans-serif;
-    line-height: 1.6;
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 1.125rem;
+    line-height: 1.65;
     overflow-x: hidden;
+    /* Rice paper: the base colour plus a faint fibre grain */
+    background-color: var(--paper);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.3 0 0 0 0 0.2 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
-a { color: var(--teal); }
+a { color: var(--azurite); }
 
-/* ─── Background: three blurred blobs drifting slowly ─── */
-.blobs { position: fixed; inset: 0; z-index: -2; overflow: hidden; filter: blur(80px); opacity: 0.55; }
-.blob { position: absolute; width: 42vmax; height: 42vmax; border-radius: 50%; animation: drift 22s ease-in-out infinite alternate; }
-.b1 { top: -10%; left: -10%; background: var(--violet); }
-.b2 { bottom: -15%; right: -10%; background: var(--pink); animation-duration: 28s; }
-.b3 { top: 30%; left: 40%; width: 30vmax; height: 30vmax; background: var(--teal); animation-duration: 18s; }
-@keyframes drift {
-    to { transform: translate(8vw, 6vh) scale(1.15) rotate(30deg); }
-}
-
-/* The glow under the mouse (script.js moves it) */
-.glow {
-    position: fixed; z-index: -1; left: 0; top: 0;
-    width: 30rem; height: 30rem; margin: -15rem 0 0 -15rem; border-radius: 50%;
-    background: radial-gradient(circle, rgb(255 255 255 / 0.10), transparent 60%);
+/* ─── The painting (script.js draws on these) ─── */
+#paint, #water {
+    position: fixed; left: 0; top: 0; z-index: -1;
+    width: 100vw; height: 100vh; height: 100lvh;
     pointer-events: none;
-    transform: translate(var(--x, 50vw), var(--y, 50vh));
 }
 
-/* ─── The hero ─── */
+/* ─── The hero: the name written stroke by stroke ─── */
 .hero {
-    display: grid; place-content: center; justify-items: center; gap: 1rem;
-    min-height: 100vh; padding: 2rem; text-align: center;
+    display: grid; place-content: center; justify-items: center;
+    min-height: 100vh; min-height: 100svh; padding: 2rem 1rem; text-align: center;
 }
-.kicker { color: var(--muted); font-size: 1.125rem; }
-.name {
-    font-size: clamp(3rem, 12vw, 9rem); font-weight: 800; line-height: 1; letter-spacing: -0.04em;
-    background: linear-gradient(90deg, var(--pink), var(--violet), var(--teal), var(--pink));
-    background-size: 300% 100%;
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-    animation: shimmer 8s linear infinite;
+.name-row { position: relative; display: flex; align-items: flex-end; }
+.hanzi { display: flex; font-weight: normal; }
+.hanzi .zi { display: block; }
+.hanzi .zi { overflow: visible; }
+.zi-ink { fill: var(--ink); fill-opacity: 0.9; }
+.hanzi-text { font-family: var(--brush); font-size: min(19vw, 128px); line-height: 1.2; }
+
+/* The seal, stamped once the last stroke is down */
+.seal {
+    position: absolute; right: calc(-1 * min(15vw, 68px)); bottom: 4%;
+    display: grid; grid-template: 1fr 1fr / 1fr 1fr; grid-auto-flow: column; direction: rtl;
+    place-items: center;
+    width: min(12vw, 56px); height: min(12vw, 56px); padding: 3px;
+    background: var(--seal); color: var(--paper); border-radius: 3px;
+    font-family: var(--brush); font-size: min(4.4vw, 21px); line-height: 1;
+    opacity: 0; transform: rotate(-4deg) scale(1.35);
 }
-@keyframes shimmer { to { background-position: 300% 0; } }
-/* Each letter of the name drops in, one after another (script.js splits
-   them). The gradient moves onto the letters, each shifted by where the
-   letter sits (--left, --w from script.js), so it runs as one across the name */
-.name.is-split { background: none; animation: none; }
-.name .ch {
-    display: inline-block; opacity: 0; transform: translateY(0.6em) rotate(8deg);
-    background: linear-gradient(90deg, var(--pink), var(--violet), var(--teal), var(--pink));
-    background-size: calc(var(--w, 10em) * 3) 100%;
-    background-position: calc(-1 * var(--left, 0px)) 0;
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-    animation: drop 0.7s cubic-bezier(.2,.8,.2,1.2) forwards, shimmer-ch 8s linear infinite;
-    animation-delay: calc(var(--i) * 60ms), 0s;
+.named .seal { animation: stamp 0.5s var(--ease-out) 0.15s forwards; }
+@keyframes stamp {
+    0% { opacity: 0; transform: rotate(-4deg) scale(1.35); }
+    55% { opacity: 1; transform: rotate(-4deg) scale(0.94); }
+    100% { opacity: 1; transform: rotate(-4deg) scale(1); }
 }
-@keyframes shimmer-ch {
-    from { background-position: calc(-1 * var(--left, 0px)) 0; }
-    to { background-position: calc(var(--w, 10em) * 3 - var(--left, 0px)) 0; }
+
+.latin {
+    margin-top: 1.25rem;
+    font-family: var(--serif-display); font-style: italic; font-weight: 500;
+    font-size: clamp(1.75rem, 5vw, 2.75rem); letter-spacing: 0.01em; line-height: 1.1;
+    opacity: 0; transform: translateY(8px);
+    transition: opacity 0.9s var(--ease-out) 0.5s, transform 0.9s var(--ease-out) 0.5s;
 }
-@keyframes drop { to { opacity: 1; transform: none; } }
-.tagline { max-width: 32rem; color: var(--muted); font-size: 1.25rem; }
-.scroll-hint { margin-top: 3rem; color: var(--muted); font-size: 0.875rem; text-decoration: none; letter-spacing: 0.2em; text-transform: uppercase; animation: bob 2s ease-in-out infinite; }
-@keyframes bob { 50% { transform: translateY(8px); } }
+.named .latin { opacity: 1; transform: none; }
 
-/* ─── Sections ─── */
-.section { max-width: 60rem; margin: 0 auto; padding: 6rem 1.5rem; }
-.section h2 { margin-bottom: 1.5rem; font-size: clamp(2rem, 5vw, 3rem); letter-spacing: -0.02em; }
-.section > p { max-width: 38rem; color: var(--muted); font-size: 1.125rem; }
-
-.cards { display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
-.card {
-    padding: 1.75rem; border: 1px solid var(--line); border-radius: 1.25rem; background: var(--card);
-    backdrop-filter: blur(10px);
-    transition: transform 0.2s ease-out, border-color 0.2s;
-    transform: perspective(800px) rotateX(var(--rx, 0)) rotateY(var(--ry, 0));
+/* Hello in each language I speak, one at a time */
+.greet {
+    display: flex; align-items: baseline; justify-content: center; gap: 0.6rem;
+    min-height: 2.2rem; margin-top: 0.75rem; color: var(--muted);
+    opacity: 0; transition: opacity 0.9s var(--ease-out) 0.9s;
 }
-.card:hover { border-color: var(--violet); }
-.card h3 { margin-bottom: 0.5rem; }
-.card p { color: var(--muted); }
+.named .greet { opacity: 1; }
+.greet > span { display: inline-block; transition: opacity 0.4s var(--ease-out), transform 0.4s var(--ease-out); }
+.greet.out > span { opacity: 0; transform: translateY(-6px); }
+.greet-word { font-family: var(--serif-display), var(--brush); font-size: 1.5rem; font-weight: 600; color: var(--ink-soft); }
 
-.foot { padding: 3rem 1.5rem; color: var(--muted); font-size: 0.875rem; text-align: center; }
+.scroll-hint {
+    margin-top: 3.5rem; color: var(--muted); font-size: 0.75rem; text-decoration: none;
+    letter-spacing: 0.24em; text-transform: uppercase;
+    opacity: 0; transition: opacity 0.9s var(--ease-out) 1.4s;
+}
+.named .scroll-hint { opacity: 1; animation: bob 2.4s var(--ease-in-out) 2.4s infinite; }
+@keyframes bob { 50% { transform: translateY(6px); } }
 
-/* ─── Fade-up as things scroll into view (script.js adds .in) ─── */
-.reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.8s ease, transform 0.8s ease; }
-.reveal.in { opacity: 1; transform: none; }
+/* ─── Sections arrive like ink soaking into paper ─── */
+@property --r { syntax: '<percentage>'; inherits: false; initial-value: -40%; }
+.bleed {
+    --r: -40%;
+    -webkit-mask-image: radial-gradient(ellipse 130% 110% at 12% 20%, #000 var(--r), transparent calc(var(--r) + 35%));
+    mask-image: radial-gradient(ellipse 130% 110% at 12% 20%, #000 var(--r), transparent calc(var(--r) + 35%));
+    transition: --r 1.8s var(--ease-out);
+}
+.bleed.in { --r: 110%; }
 
-/* People who ask their device for less motion get the calm version */
+main { width: min(100% - 2rem, 44rem); margin: 0 auto; padding-bottom: 6rem; }
+
+.intro { padding: 4rem 0 3rem; }
+.lede {
+    font-family: var(--serif-display); font-weight: 500;
+    font-size: clamp(1.6rem, 4vw, 2.2rem); line-height: 1.25;
+    text-wrap: balance;
+}
+
+/* ─── The doorways: read like a book's contents page ─── */
+.doors { display: grid; border-top: 1px solid var(--line); }
+.door {
+    display: grid; grid-template-columns: 3.5rem 1fr auto; align-items: center; gap: 1rem;
+    padding: 1.1rem 0.25rem; border-bottom: 1px solid var(--line);
+    color: inherit; text-decoration: none;
+    transition: transform 0.45s var(--ease-out);
+}
+.door-zi {
+    font-family: var(--brush); font-size: 2.4rem; line-height: 1; color: var(--ink);
+    transition: color 0.45s var(--ease-out);
+}
+.door-title { font-family: var(--serif-display); font-weight: 600; font-size: 1.5rem; line-height: 1.2; }
+.door-soon { color: var(--muted); font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; }
+.door:hover { transform: translateX(6px); }
+.door:hover .door-zi { color: var(--malachite); }
+
+/* ─── Footer ─── */
+.foot {
+    display: grid; justify-items: center; gap: 0.5rem;
+    padding: 3rem 1rem 6rem; text-align: center; color: var(--muted); font-size: 0.875rem;
+}
+.pisces { margin-bottom: 0.5rem; }
+.fish { width: 64px; height: 64px; overflow: visible; }
+.fish .cord { fill: none; stroke: var(--ochre); stroke-width: 1.2; stroke-linecap: round; }
+.fish-a { fill: var(--azurite); }
+.fish-b { fill: var(--malachite); }
+.fish g { transform-origin: 0 0; }
+.pisces:hover .fish-a, .pisces:hover .fish-b { animation: swim 3.2s var(--ease-in-out) infinite; }
+@keyframes swim {
+    50% { transform: rotate(180deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@media (max-width: 560px) {
+    .door { grid-template-columns: 2.75rem 1fr; }
+    .door-soon { display: none; }
+    .door-zi { font-size: 2rem; }
+    .foot { padding-bottom: 7rem; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation: none !important; transition: none !important; }
-    .reveal, .name .ch { opacity: 1; transform: none; }
+    html { scroll-behavior: auto; }
+    .bleed { -webkit-mask-image: none; mask-image: none; }
+    .named .seal { animation: none; opacity: 1; transform: rotate(-4deg); }
+    .named .scroll-hint { animation: none; }
+    .latin, .greet, .scroll-hint, .greet > span { transition: none; }
+    .pisces:hover .fish-a, .pisces:hover .fish-b { animation: none; }
 }
