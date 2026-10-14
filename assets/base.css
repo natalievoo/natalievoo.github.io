@@ -124,6 +124,7 @@ button { font: inherit; color: inherit; }
 .chip:hover { background: rgb(31 42 48 / 0.06); }
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 
+.site-foot .made { flex: 1; text-align: center; font-style: italic; }
 .site-foot {
     width: min(100% - 2rem, 72rem); margin: 0 auto; padding-block: 2rem 4rem;
     display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;

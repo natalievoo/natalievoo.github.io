@@ -105,10 +105,12 @@
         </div>
     </main>
 
-    <footer class="site-foot"><span>© <span data-year></span> Natalie Voo</span><a href="../projects/project.html?p=chicken-chase">How I made this</a></footer>
+    <footer class="site-foot"><span>© <span data-year></span> Natalie Voo</span><span class="made" data-made></span><a href="../projects/project.html?p=chicken-chase">How I made this</a></footer>
 
+    <script src="../data/site.js"></script>
     <script src="../assets/stickers.js"></script>
     <script src="../assets/site.js"></script>
+    <script src="../assets/screensaver.js"></script>
     <script src="game.js"></script>
     <script>document.querySelectorAll('[data-year]').forEach((el) => { el.textContent = new Date().getFullYear(); });</script>
 </body>

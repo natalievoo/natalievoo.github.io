@@ -55,6 +55,7 @@
     <main>
         <section id="about" class="intro bleed">
             <p class="lede">I work with data, build small things on the side, and collect places, books and languages along the way.</p>
+            <p class="now-line" data-now></p>
         </section>
 
         <figure class="horse-band bleed">
@@ -62,38 +63,10 @@
             <figcaption>丙午 · 2026 is the year of the fire horse, and the horse is my sign.</figcaption>
         </figure>
 
-        <nav class="doors bleed" aria-label="Sections">
-            <a class="door" href="travel/index.html">
-                <span class="door-zi" aria-hidden="true">旅</span>
-                <span class="door-title">Travel</span>
-                <span class="door-soon" aria-hidden="true">→</span>
-            </a>
-            <a class="door" href="reading/index.html">
-                <span class="door-zi" aria-hidden="true">读</span>
-                <span class="door-title">Reading</span>
-                <span class="door-soon" aria-hidden="true">→</span>
-            </a>
-            <a class="door" href="writing/index.html">
-                <span class="door-zi" aria-hidden="true">写</span>
-                <span class="door-title">Writing</span>
-                <span class="door-soon" aria-hidden="true">→</span>
-            </a>
-            <a class="door" href="projects/index.html">
-                <span class="door-zi" aria-hidden="true">作</span>
-                <span class="door-title">Projects</span>
-                <span class="door-soon" aria-hidden="true">→</span>
-            </a>
-            <a class="door" href="life/index.html">
-                <span class="door-zi" aria-hidden="true">生</span>
-                <span class="door-title">Life</span>
-                <span class="door-soon" aria-hidden="true">→</span>
-            </a>
-            <a class="door door-play" href="play/index.html">
-                <span class="door-zi" aria-hidden="true">玩</span>
-                <span class="door-title">Chase the chickens</span>
-                <span class="door-soon" aria-hidden="true">→</span>
-            </a>
-        </nav>
+        <section class="desk-wrap bleed">
+            <p class="desk-hint">Things on my desk. Pick one up.</p>
+            <div class="desk" data-desk></div>
+        </section>
     </main>
 
     <footer class="foot">
@@ -105,12 +78,23 @@
             </svg>
         </div>
         <p class="credit">© <span data-year></span> Natalie Voo</p>
+        <p class="credit made" data-made></p>
     </footer>
 
 
+    <script src="data/site.js"></script>
+    <script src="data/about.js"></script>
     <script src="assets/stickers.js"></script>
     <script src="assets/site.js"></script>
     <script src="script.js"></script>
     <script src="assets/char-horse.js"></script>
+    <script src="assets/desk.js"></script>
+    <script src="assets/screensaver.js"></script>
+    <script>
+        // What I'm up to, from now.txt on the About page
+        const now = (window.ABOUT?.now || []).slice(0, 3);
+        const el = document.querySelector('[data-now]');
+        if (now.length) el.innerHTML = 'now: ' + now.map((n) => `${SITE.esc(n.label)} ${SITE.esc(n.text)}`).join(' · ') + (now.some((n) => n.sample) ? ' <span class="sample">sample</span>' : '');
+    </script>
 </body>
 </html>

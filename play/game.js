@@ -282,12 +282,14 @@
     function start() {
         reset();
         $('#intro').hidden = true; $('#over').hidden = true;
+        document.body.classList.add('no-idle'); // the screensaver stays away while a round is on
         running = true; last = performance.now();
         canvas.focus();
         requestAnimationFrame(loop);
     }
     function end() {
         running = false; target = null;
+        document.body.classList.remove('no-idle');
         const prev = best();
         if (caught > prev) { try { localStorage.setItem(BEST, caught); } catch { /* fine */ } }
         $('#final').textContent = caught;

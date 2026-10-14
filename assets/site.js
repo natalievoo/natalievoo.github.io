@@ -25,7 +25,7 @@
     window.SITE = { root, esc, param, reduce, MONTHS, stars, sample, date, tally };
 
     const SECTIONS = [
-        ['travel', '旅', 'Travel'], ['reading', '读', 'Reading'], ['writing', '写', 'Writing'],
+        ['about', '我', 'About'], ['travel', '旅', 'Travel'], ['reading', '读', 'Reading'], ['writing', '写', 'Writing'],
         ['projects', '作', 'Projects'], ['life', '生', 'Life'], ['play', '玩', 'Play'],
     ];
     const SEAL = `<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="4" y="4" width="92" height="92" rx="5" fill="#b3362b"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" font-family="'LXGW WenKai TC', KaiTi, serif" font-weight="700" font-size="74" fill="#f4efe4">鄔</text></svg>`;
@@ -305,6 +305,26 @@
     }
     btn?.addEventListener('click', () => (tin ? closeTin() : openTin()));
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && tin) closeTin(); });
+
+    // ─── The honest footer line ───
+    const info = window.SITE_INFO;
+    if (info) document.querySelectorAll('[data-made]').forEach((el) => {
+        el.innerHTML = `made by hand (and with Claude), fuelled by ${esc(info.fuel)} · last updated ${date(info.updated)} · currently in ${esc(info.place)}`;
+    });
+
+    // ─── Page titles scramble in from Greek letters and characters ───
+    const h1 = document.querySelector('.sketchbook .page-head h1');
+    if (h1 && !reduce) {
+        const final = h1.textContent, POOL = 'αβγδεζηθλμξπσφψωABCDEFGHKLMNPRSTUVWXYZ马水鱼山风月';
+        const n = final.length, total = 26;
+        let f = 0;
+        const tick = () => {
+            f++;
+            h1.textContent = [...final].map((ch, i) => (ch === ' ' || i < (f / total) * n ? ch : POOL[(Math.random() * POOL.length) | 0])).join('');
+            if (f < total) requestAnimationFrame(tick); else h1.textContent = final;
+        };
+        requestAnimationFrame(tick);
+    }
 
     // ─── Windows ───
     // <div class="window" data-title="todo.txt"> gets a title bar, and can be dragged around by it

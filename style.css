@@ -119,25 +119,40 @@ main { width: min(100% - 2rem, 44rem); margin: 0 auto; padding-bottom: 6rem; }
 .horse-band canvas { display: block; max-width: 100%; }
 .horse-band figcaption { color: var(--muted); font-size: 0.9rem; }
 
-/* ─── The doorways: read like a book's contents page ─── */
-.doors { display: grid; border-top: 1px solid var(--line); }
-.door {
-    display: grid; grid-template-columns: 3.5rem 1fr auto; align-items: center; gap: 1rem;
-    padding: 1.1rem 0.25rem; border-bottom: 1px solid var(--line);
-    color: inherit; text-decoration: none;
-    transition: transform 0.45s var(--ease-out);
+/* ─── The desk: the things on it are the way in ─── */
+.now-line { margin-top: 1rem; color: var(--muted); font-style: italic; font-size: 1rem; }
+.desk-wrap { margin-inline: calc(50% - 50vw); padding-inline: max(1rem, calc(50vw - 36rem)); padding-bottom: 2rem; }
+.desk-hint { color: var(--muted); font-size: 0.9rem; font-style: italic; margin-bottom: 0.5rem; }
+.desk { position: relative; height: 32rem; }
+.obj {
+    position: absolute; left: var(--l); top: var(--t); width: min(11.5rem, 16vw);
+    display: grid; justify-items: center; gap: 0; padding: 0; border: 0; background: none; cursor: pointer;
+    color: inherit; text-decoration: none; font: inherit;
+    transform: rotate(var(--r)); transition: transform 0.45s var(--ease-back);
 }
-.door-zi {
-    font-family: var(--brush); font-size: 2.4rem; line-height: 1; color: var(--ink);
-    transition: color 0.45s var(--ease-out);
+.obj.small { width: min(8.5rem, 12vw); }
+.obj.decor { cursor: default; }
+.obj svg { width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 10px 12px rgb(31 42 48 / 0.14)); transition: filter 0.45s var(--ease-out); }
+.obj:hover, .obj:focus-visible { transform: rotate(0deg) translateY(-10px); z-index: 2; }
+.obj:hover svg, .obj:focus-visible svg { filter: drop-shadow(0 24px 22px rgb(31 42 48 / 0.2)); }
+.obj-label { display: flex; gap: 0.4rem; align-items: baseline; margin-top: -0.4rem; font-family: var(--serif-display); font-style: italic; font-size: 1.15rem; color: var(--muted); transition: color 0.3s; }
+.obj-label .zi { font-family: var(--brush); font-style: normal; font-size: 1.2rem; color: var(--ink); }
+.obj:hover .obj-label { color: var(--ink); }
+.obj.decor .obj-label { opacity: 0; transition: opacity 0.3s; }
+.obj.decor:hover .obj-label { opacity: 1; }
+/* Little things the objects do when you touch them */
+.obj-tea:hover .steam path { animation: steam 1.6s ease-in-out infinite; }
+.obj-tea .steam path:nth-child(2) { animation-delay: 0.3s; } .obj-tea .steam path:nth-child(3) { animation-delay: 0.6s; }
+@keyframes steam { 50% { transform: translateY(-4px); opacity: 0.2; } }
+.obj-horse:hover .figurine { animation: rear 0.9s var(--ease-back); transform-origin: 80px 124px; }
+@keyframes rear { 30% { transform: rotate(-9deg); } 60% { transform: rotate(3deg); } }
+.obj-reading:hover .books > rect:nth-of-type(3) { transform: translateX(6px); }
+.obj-reading .books > rect { transition: transform 0.4s var(--ease-back); }
+@media (max-width: 760px) {
+    .desk { height: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 0.5rem; }
+    .obj, .obj.small { position: static; width: 100%; }
+    .obj.decor { display: none; }
 }
-.door-title { font-family: var(--serif-display); font-weight: 600; font-size: 1.5rem; line-height: 1.2; }
-.door-soon { color: var(--muted); font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; }
-.door:hover { transform: translateX(6px); }
-.door:hover .door-zi { color: var(--malachite); }
-.door-soon { font-size: 1.2rem; letter-spacing: 0; text-transform: none; transition: transform 0.35s var(--ease-back); }
-.door:hover .door-soon { transform: translateX(4px); color: var(--ink); }
-.door-play .door-zi { color: var(--seal); }
 
 /* ─── Footer ─── */
 .foot {
