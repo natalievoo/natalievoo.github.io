@@ -55,13 +55,11 @@ a { color: var(--azurite); }
 /* The seal, stamped once the last stroke is down */
 .seal {
     position: absolute; right: calc(-1 * min(15vw, 68px)); bottom: 4%;
-    display: grid; grid-template: 1fr 1fr / 1fr 1fr; grid-auto-flow: column; direction: rtl;
-    place-items: center;
-    width: min(12vw, 56px); height: min(12vw, 56px); padding: 3px;
-    background: var(--seal); color: var(--paper); border-radius: 3px;
-    font-family: var(--brush); font-size: min(4.4vw, 21px); line-height: 1;
+    width: min(12vw, 56px); height: min(12vw, 56px); overflow: visible;
     opacity: 0; transform: rotate(-4deg) scale(1.35);
 }
+.seal-stone { fill: var(--seal); }
+.seal-zi { fill: var(--paper); font: 700 76px 'LXGW WenKai TC', 'KaiTi', 'DFKai-SB', serif; }
 .named .seal { animation: stamp 0.5s var(--ease-out) 0.15s forwards; }
 @keyframes stamp {
     0% { opacity: 0; transform: rotate(-4deg) scale(1.35); }
@@ -116,6 +114,11 @@ main { width: min(100% - 2rem, 44rem); margin: 0 auto; padding-bottom: 6rem; }
     text-wrap: balance;
 }
 
+/* ─── The horse, galloping in characters ─── */
+.horse-band { display: grid; justify-items: center; gap: 0.5rem; margin: 0 0 3rem; }
+.horse-band canvas { display: block; max-width: 100%; }
+.horse-band figcaption { color: var(--muted); font-size: 0.9rem; }
+
 /* ─── The doorways: read like a book's contents page ─── */
 .doors { display: grid; border-top: 1px solid var(--line); }
 .door {
@@ -132,6 +135,9 @@ main { width: min(100% - 2rem, 44rem); margin: 0 auto; padding-bottom: 6rem; }
 .door-soon { color: var(--muted); font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; }
 .door:hover { transform: translateX(6px); }
 .door:hover .door-zi { color: var(--malachite); }
+.door-soon { font-size: 1.2rem; letter-spacing: 0; text-transform: none; transition: transform 0.35s var(--ease-back); }
+.door:hover .door-soon { transform: translateX(4px); color: var(--ink); }
+.door-play .door-zi { color: var(--seal); }
 
 /* ─── Footer ─── */
 .foot {

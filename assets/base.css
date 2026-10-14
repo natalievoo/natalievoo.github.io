@@ -1,0 +1,258 @@
+/* Shared by every page: colours, type, the paper, the header and the stickers.
+   The palette comes from A Thousand Li of Rivers and Mountains (Wang Ximeng, 1113) */
+:root {
+    --paper: #f4efe4;
+    --paper-deep: #ebe3d3;
+    --card: #fbf8f1;
+    --ink: #1f2a30;
+    --ink-soft: #3b464b;
+    --muted: #5f655f;
+    --azurite: #2f5d8c;
+    --malachite: #3d8b7d;
+    --stone: #7fb3a3;
+    --ochre: #c79a5b;
+    --seal: #b3362b;
+    --line: rgb(31 42 48 / 0.14);
+    --shadow: 0 1px 2px rgb(31 42 48 / 0.06), 0 8px 24px rgb(31 42 48 / 0.08);
+    --ease-out: cubic-bezier(.22, .61, .36, 1);
+    --ease-in-out: cubic-bezier(.65, 0, .35, 1);
+    --ease-back: cubic-bezier(.34, 1.56, .64, 1);
+    --serif-display: 'Cormorant Garamond', 'Times New Roman', serif;
+    --serif: 'Newsreader', Georgia, serif;
+    --brush: 'Ma Shan Zheng', 'KaiTi', 'STKaiti', serif;
+    --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; }
+html { scroll-behavior: smooth; }
+body {
+    min-height: 100vh;
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    overflow-x: hidden;
+    /* Rice paper: the base colour plus a faint fibre grain */
+    background-color: var(--paper);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.3 0 0 0 0 0.2 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+a { color: var(--azurite); text-underline-offset: 0.18em; }
+a:hover { color: var(--malachite); }
+:focus-visible { outline: 2px solid var(--azurite); outline-offset: 3px; border-radius: 2px; }
+h1, h2, h3 { font-family: var(--serif-display); font-weight: 600; line-height: 1.1; text-wrap: balance; }
+img { max-width: 100%; display: block; }
+[hidden] { display: none !important; }
+button { font: inherit; color: inherit; }
+
+/* ─── Header: the seal goes home, each section has its brush character ─── */
+.site-head {
+    position: relative; z-index: 20;
+    display: flex; align-items: center; gap: 1.25rem;
+    width: min(100% - 2rem, 72rem); margin: 0 auto; padding-block: 1.25rem;
+}
+.home-seal { flex: none; display: block; width: 2.4rem; height: 2.4rem; transform: rotate(-4deg); transition: transform 0.4s var(--ease-back); }
+.home-seal:hover { transform: rotate(4deg) scale(1.06); }
+.home-seal svg { width: 100%; height: 100%; display: block; }
+.site-nav { display: flex; gap: 0.25rem; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.site-nav a {
+    display: inline-flex; align-items: baseline; gap: 0.35rem; white-space: nowrap;
+    padding: 0.35rem 0.6rem; border-radius: 999px;
+    color: var(--ink-soft); text-decoration: none; font-size: 0.95rem;
+    transition: background 0.3s var(--ease-out), color 0.3s var(--ease-out);
+}
+.site-nav a span:first-child { font-family: var(--brush); font-size: 1.15rem; line-height: 1; }
+.site-nav a:hover { background: rgb(31 42 48 / 0.06); color: var(--ink); }
+.site-nav a[aria-current="page"] { background: var(--ink); color: var(--paper); }
+.tin-btn {
+    flex: none; display: inline-flex; align-items: center; gap: 0.45rem;
+    padding: 0.4rem 0.8rem 0.4rem 0.45rem; border: 1px solid var(--line); border-radius: 999px;
+    background: var(--card); cursor: pointer; font-size: 0.9rem; box-shadow: var(--shadow);
+    transition: transform 0.3s var(--ease-back);
+}
+.tin-btn:hover { transform: translateY(-1px) rotate(-2deg); }
+.tin-btn svg { width: 1.6rem; height: 1.6rem; }
+.site-head.minimal { position: fixed; top: 0; right: 0; width: auto; padding: 1rem; justify-content: flex-end; }
+@media (max-width: 640px) {
+    .site-head { gap: 0.6rem; }
+    .site-nav a { padding: 0.35rem 0.45rem; }
+    .site-nav a span:last-child { display: none; }
+    .site-nav a span:first-child { font-size: 1.35rem; }
+    .tin-btn span { display: none; }
+    .tin-btn { padding: 0.35rem; }
+}
+
+/* ─── Page frame ─── */
+.page { width: min(100% - 2rem, 72rem); margin: 0 auto; padding-block: 2rem 6rem; }
+.page-head { position: relative; display: grid; gap: 0.75rem; padding-block: 2.5rem 3rem; max-width: 44rem; }
+.page-head .watermark {
+    position: absolute; z-index: -1; right: -2rem; top: -1.5rem;
+    font-family: var(--brush); font-size: clamp(9rem, 22vw, 15rem); line-height: 1;
+    color: rgb(31 42 48 / 0.06); pointer-events: none; user-select: none;
+}
+.page-head h1 { font-size: clamp(2.6rem, 6vw, 4rem); }
+.page-head p { color: var(--ink-soft); font-size: 1.15rem; max-width: 36rem; }
+.eyebrow { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.section { display: grid; gap: 1.25rem; padding-block: 2.5rem; }
+.section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; border-bottom: 1px solid var(--line); padding-bottom: 0.6rem; }
+.section-head h2 { font-size: 1.9rem; }
+.section-head p { color: var(--muted); font-size: 0.95rem; }
+.back { display: inline-flex; gap: 0.4rem; align-items: center; color: var(--muted); text-decoration: none; font-size: 0.95rem; }
+.back:hover { color: var(--ink); }
+
+/* A small tag on entries that are still example content */
+.sample {
+    display: inline-block; padding: 0.05rem 0.45rem; border-radius: 999px;
+    font: 500 0.65rem/1.6 var(--mono); letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--seal); border: 1px dashed currentColor; vertical-align: middle;
+    justify-self: start; width: fit-content;
+}
+.empty { color: var(--muted); font-style: italic; }
+.stars { color: var(--ochre); letter-spacing: 0.08em; white-space: nowrap; }
+.tallies { display: inline-flex; gap: 0.2rem; vertical-align: middle; }
+.tally { width: 1.15em; height: 1.15em; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+.button {
+    display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.1rem; border-radius: 999px;
+    background: var(--ink); color: var(--paper); text-decoration: none; font-size: 0.95rem;
+    transition: transform 0.3s var(--ease-back), background 0.3s;
+}
+.button:hover { color: var(--paper); background: var(--azurite); transform: translateY(-2px); }
+.chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.chip {
+    padding: 0.3rem 0.8rem; border-radius: 999px; border: 1px solid var(--line); background: transparent;
+    font-size: 0.88rem; cursor: pointer; transition: background 0.25s, color 0.25s;
+}
+.chip:hover { background: rgb(31 42 48 / 0.06); }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+.site-foot {
+    width: min(100% - 2rem, 72rem); margin: 0 auto; padding-block: 2rem 4rem;
+    display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    border-top: 1px solid var(--line); color: var(--muted); font-size: 0.875rem;
+}
+
+/* ─── Stickers ─── */
+.sticker-layer { position: absolute; left: 0; top: 0; width: 100%; height: 0; z-index: 30; pointer-events: none; }
+.sticker-layer.busy { z-index: 50; } /* above the tin while one is being peeled out of it */
+.sticker {
+    position: absolute; width: 84px; height: 84px; margin: -42px 0 0 -42px;
+    pointer-events: auto; cursor: grab; touch-action: none; user-select: none;
+    transform: rotate(var(--rot, 0deg)) scale(var(--s, 1));
+    filter: url(#die-cut) drop-shadow(0 1px 1px rgb(31 42 48 / 0.2)) drop-shadow(0 4px 6px rgb(31 42 48 / 0.08));
+    transition: transform 0.25s var(--ease-out), filter 0.25s var(--ease-out), opacity 0.2s;
+}
+.sticker svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.st-front, .st-flap { position: absolute; inset: 0; }
+/* The flap is the sticker's white backing, folded over: shaded so the fold reads as paper */
+.st-flap { transform-origin: 0 0; filter: drop-shadow(-2px 3px 3px rgb(31 42 48 / calc(0.12 + var(--lift, 0) * 0.2))); }
+.st-flap svg { filter: brightness(0) invert(calc(0.9 + var(--lift, 0) * 0.07)); }
+.sticker:hover { --s: 1.03; }
+.sticker.peeling { cursor: grabbing; }
+.sticker.lifted { cursor: grabbing; --s: 1.1; z-index: 2; transition: filter 0.25s var(--ease-out);
+    filter: url(#die-cut) drop-shadow(0 10px 8px rgb(31 42 48 / 0.18)) drop-shadow(0 22px 26px rgb(31 42 48 / 0.16)); }
+.sticker.pressing { --s: 1.02; }
+.sticker.gone { opacity: 0; transform: rotate(var(--rot, 0deg)) translateY(-14px) scale(0.92); }
+
+.tin {
+    position: fixed; z-index: 40; right: 1rem; top: 4.5rem;
+    width: min(22rem, calc(100vw - 2rem)); max-height: min(70vh, 34rem); overflow: auto;
+    padding: 1rem; border-radius: 18px; background: var(--card); border: 1px solid var(--line);
+    box-shadow: 0 2px 4px rgb(31 42 48 / 0.06), 0 24px 48px rgb(31 42 48 / 0.18);
+    transform-origin: top right; animation: tin-open 0.32s var(--ease-back);
+}
+@keyframes tin-open { from { opacity: 0; transform: scale(0.9) translateY(-6px); } }
+.tin h2 { font-size: 1.35rem; }
+.tin p { color: var(--muted); font-size: 0.85rem; line-height: 1.4; margin-top: 0.2rem; }
+.tin-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.4rem; margin-block: 0.9rem; }
+.tin-item {
+    aspect-ratio: 1; padding: 0.3rem; border: 0; border-radius: 12px; background: transparent;
+    min-width: 0; width: 100%; cursor: grab; touch-action: none; transition: background 0.2s, transform 0.25s var(--ease-back);
+}
+.tin-item:hover { background: rgb(31 42 48 / 0.05); transform: rotate(-6deg) scale(1.08); }
+.tin-item svg { width: 100%; height: 100%; filter: url(#die-cut) drop-shadow(0 1px 1px rgb(31 42 48 / 0.2)); overflow: visible; }
+.tin-actions { display: flex; justify-content: space-between; gap: 0.5rem; }
+.tin-actions button { border: 1px solid var(--line); background: none; border-radius: 999px; padding: 0.3rem 0.8rem; font-size: 0.85rem; cursor: pointer; }
+.tin-actions button:hover { background: rgb(31 42 48 / 0.05); }
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .sticker, .tin-item, .tin-btn, .home-seal { transition: none; }
+    .tin { animation: none; }
+}
+
+/* ═══ The sketchbook: every page past the homepage ═══
+   Graph paper, one blue ballpoint, pixel-set headings, and a few things taped or scribbled in.
+   The homepage stays ink on rice paper; walking in, you open the notebook. */
+body.sketchbook {
+    --paper: #fbfaf5;
+    --card: #ffffff;
+    --pen: #3d52b5;          /* the ballpoint */
+    --grid: rgb(61 82 181 / 0.09);
+    --grid-strong: rgb(61 82 181 / 0.16);
+    --postit: #f7e9a6;
+    --tape: rgb(214 188 140 / 0.55);
+    --hand: 'Caveat', 'Segoe Print', cursive;
+    --pixel: 'Silkscreen', var(--mono);
+    background-color: var(--paper);
+    background-image:
+        linear-gradient(var(--grid-strong) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-strong) 1px, transparent 1px),
+        linear-gradient(var(--grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px;
+    background-position: -1px -1px;
+}
+/* The red margin line down the left of a notebook page */
+body.sketchbook::before {
+    content: ''; position: fixed; z-index: -1; top: 0; bottom: 0; left: max(12px, calc(50vw - 37.5rem));
+    border-left: 1.5px solid rgb(179 54 43 / 0.28);
+}
+.sketchbook a { color: var(--pen); }
+.sketchbook .site-nav a { color: var(--ink-soft); }
+.sketchbook .site-nav a[aria-current="page"] { color: var(--paper); }
+.sketchbook :focus-visible { outline-color: var(--pen); }
+
+/* Headings: the serif, set through a pixel grid so it reads like a printout */
+.sketchbook .page-head h1 { filter: url(#pixel-type); letter-spacing: -0.01em; }
+.sketchbook .page-head .watermark { color: transparent; -webkit-text-stroke: 1.5px rgb(61 82 181 / 0.18); filter: url(#pencil-wobble); }
+.sketchbook .eyebrow {
+    justify-self: start; font: 400 0.7rem/1 var(--pixel); letter-spacing: 0.08em; color: var(--ink);
+    padding: 0.35rem 0.5rem 0.3rem; background: linear-gradient(transparent 15%, rgb(247 233 166 / 0.95) 15% 85%, transparent 85%);
+    transform: rotate(-1.5deg);
+}
+/* Section headings get a hand-drawn wavy underline instead of a rule */
+.sketchbook .section-head { border-bottom: 0; padding-bottom: 0; }
+.sketchbook .section-head h2 {
+    padding-bottom: 0.5rem;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='8' viewBox='0 0 120 8'%3E%3Cpath d='M1 5 Q 8 1 15 4.5 T 30 4 T 45 4.6 T 60 3.8 T 75 4.4 T 90 4 T 105 4.5 T 119 3.6' fill='none' stroke='%233d52b5' stroke-width='1.6' stroke-linecap='round' opacity='.7'/%3E%3C/svg%3E") left bottom / 120px 8px repeat-x;
+}
+.sketchbook .section-head p { font: 500 1.25rem/1.1 var(--hand); color: var(--pen); }
+
+/* A note scribbled in the margin, with a doodled arrow */
+.margin-note {
+    position: absolute; z-index: 1; display: flex; align-items: flex-start; gap: 0.3rem;
+    font: 500 1.35rem/1.05 var(--hand); color: var(--pen); transform: rotate(-4deg); max-width: 13rem;
+}
+.margin-note span { min-width: 10rem; }
+.margin-note svg { flex: none; width: 46px; height: 40px; stroke: var(--pen); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+@media (max-width: 900px) { .margin-note { position: static; transform: rotate(-2deg); margin-top: 0.5rem; } .margin-note svg { display: none; } }
+
+/* Things taped in */
+.taped { position: relative; }
+.taped::before {
+    content: ''; position: absolute; z-index: 2; top: -11px; left: 50%; width: 76px; height: 22px;
+    transform: translateX(-50%) rotate(var(--tape-tilt, -4deg));
+    background: var(--tape); mix-blend-mode: multiply;
+    clip-path: polygon(3% 0, 97% 4%, 100% 50%, 96% 100%, 2% 96%, 0 50%);
+}
+/* Sticky notes */
+.postit {
+    position: relative; padding: 1rem 1.1rem 1.2rem; background: var(--postit); color: var(--ink);
+    box-shadow: 0 1px 1px rgb(0 0 0 / 0.06), 0 10px 16px -8px rgb(80 60 10 / 0.25);
+    transform: rotate(var(--tilt, -2deg));
+}
+.postit:nth-child(2n) { --tilt: 1.8deg; background: #f9d9cf; }
+.postit:nth-child(3n) { --tilt: -0.8deg; background: #d8eadf; }
+.sketchbook .chip[aria-pressed="true"], .sketchbook .site-nav a[aria-current="page"] { background: var(--pen); border-color: var(--pen); }
+.sketchbook .button { background: var(--pen); }
+.sketchbook .button:hover { background: var(--ink); }
+.sketchbook .sample { color: var(--pen); }

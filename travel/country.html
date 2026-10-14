@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Country · Natalie Voo</title>
+    <meta name="description" content="Highlights and where to eat.">
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="../favicon-32.png" sizes="32x32" type="image/png">
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Silkscreen&family=Caveat:wght@500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@700&text=鄔&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/base.css">
+    <style>
+        /* A passport page: pale guilloche lines, and one ink stamp per country */
+        .passport {
+            position: relative; padding: clamp(1.25rem, 4vw, 2.5rem); border-radius: 18px;
+            background:
+                repeating-radial-gradient(circle at 20% 30%, rgb(61 139 125 / 0.07) 0 1px, transparent 1px 9px),
+                repeating-radial-gradient(circle at 85% 80%, rgb(47 93 140 / 0.06) 0 1px, transparent 1px 11px),
+                #f7f3ea;
+            border: 1px solid var(--line); box-shadow: var(--shadow);
+        }
+        .passport-top { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 1.5rem; }
+        .stamps { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 1.5rem 1rem; }
+        .stamp {
+            --c: var(--seal);
+            position: relative; display: grid; justify-items: center; gap: 0.15rem; padding: 1.1rem 0.75rem 0.9rem;
+            color: var(--c); text-decoration: none; text-align: center;
+            border: 2.5px solid var(--c); border-radius: var(--shape, 14px);
+            transform: rotate(var(--tilt, -3deg)); mix-blend-mode: multiply;
+            transition: transform 0.35s var(--ease-back);
+            filter: url(#stamp-ink);
+        }
+        .stamp::before { content: ''; position: absolute; inset: 5px; border: 1px solid var(--c); border-radius: inherit; opacity: 0.7; }
+        .stamp:hover { transform: rotate(0deg) scale(1.04); color: var(--c); }
+        .stamp .native { font-family: var(--brush), var(--serif-display); font-size: 2rem; line-height: 1.1; }
+        .stamp .name { font: 600 0.8rem/1.2 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; }
+        .stamp .meta { font: 0.7rem/1.4 var(--mono); opacity: 0.85; }
+        .stamp .tallies { margin-top: 0.3rem; font-size: 1.1rem; }
+        .stamp .sample { margin-top: 0.3rem; justify-self: center; }
+        /* The map: the world sketched in blue pen, visited countries hatched in red marker */
+        .map-sheet { position: relative; padding: 1rem; background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); }
+        .map-sheet svg { display: block; width: 100%; height: auto; }
+        .land { fill: rgb(61 82 181 / 0.04); stroke: var(--pen, #3d52b5); stroke-width: 0.6; stroke-linejoin: round; }
+        .land.visited { fill: url(#hatch); stroke: #b3362b; stroke-width: 1.1; cursor: pointer; }
+        .land.visited:hover, .land.visited:focus-visible { fill: rgb(179 54 43 / 0.35); outline: none; }
+        .graticule { fill: none; stroke: rgb(61 82 181 / 0.12); stroke-width: 0.5; stroke-dasharray: 2 3; }
+        .trail { fill: none; stroke: var(--pen, #3d52b5); stroke-width: 1.2; stroke-dasharray: 1 5; stroke-linecap: round; }
+        .pin { fill: #b3362b; stroke: #fff; stroke-width: 1.5; }
+        .map-tip {
+            position: absolute; pointer-events: none; padding: 0.15rem 0.5rem; transform: translate(-50%, -130%) rotate(-2deg);
+            font: 500 1.3rem/1.2 var(--hand, cursive); color: var(--pen, #3d52b5); background: var(--postit, #f7e9a6);
+            box-shadow: 0 6px 12px -6px rgb(80 60 10 / 0.35); white-space: nowrap;
+        }
+        .map-note { color: var(--muted); font-size: 0.9rem; padding: 2rem; text-align: center; }
+        .totals { display: flex; gap: 1.25rem; flex-wrap: wrap; }
+        .totals div { min-width: 8.5rem; }
+        .totals div { display: grid; }
+        .totals b { font: 600 2.4rem/1 var(--serif-display); }
+        .totals span { color: var(--muted); font-size: 0.9rem; }
+
+        .country-hero { display: grid; grid-template-columns: 1fr auto; gap: 2rem; align-items: end; padding-block: 2rem 1rem; }
+        .country-hero .native { font-family: var(--brush), var(--serif-display); font-size: clamp(4rem, 14vw, 9rem); line-height: 0.95; color: var(--seal); }
+        .country-hero h1 { font-size: clamp(2.2rem, 5vw, 3.4rem); }
+        .country-hero p { color: var(--ink-soft); font-size: 1.15rem; max-width: 34rem; }
+        .facts { display: flex; gap: 1.5rem; flex-wrap: wrap; color: var(--muted); font-size: 0.95rem; align-items: center; margin-top: 0.75rem; }
+        .facts .tallies { color: var(--seal); font-size: 1.4rem; }
+        /* Highlights as photos taped into a travel journal */
+        .prints { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 2rem 1.5rem; padding-top: 1rem; }
+        .print { position: relative; padding: 0.75rem 0.75rem 1.1rem; background: #fff; box-shadow: var(--shadow); transform: rotate(var(--tilt)); }
+        .print::before { content: ''; position: absolute; top: -10px; left: 50%; width: 70px; height: 22px; transform: translateX(-50%) rotate(-3deg); background: rgb(199 154 91 / 0.45); }
+        .print .photo { aspect-ratio: 4 / 3; display: grid; place-items: center; background: repeating-linear-gradient(45deg, var(--paper-deep) 0 8px, var(--paper) 8px 16px); color: var(--muted); font: 0.75rem var(--mono); margin-bottom: 0.75rem; }
+        .print h3 { font-size: 1.35rem; }
+        .print p { color: var(--ink-soft); font-size: 0.95rem; }
+        /* Where to eat: a menu card */
+        .menu { max-width: 44rem; padding: 2rem clamp(1.25rem, 4vw, 2.5rem); background: var(--card); border: 1px solid var(--line); border-radius: 6px; box-shadow: var(--shadow); }
+        .menu h2 { text-align: center; font-size: 1.8rem; }
+        .menu .zh { display: block; text-align: center; font-family: var(--brush); color: var(--seal); font-size: 1.4rem; }
+        .dish { display: grid; gap: 0.15rem; padding-block: 1rem; border-bottom: 1px dashed var(--line); }
+        .dish:last-child { border-bottom: 0; }
+        .dish .row { display: flex; align-items: baseline; gap: 0.5rem; }
+        .dish .row b { font: 600 1.2rem var(--serif-display); }
+        .dish .row i { flex: 1; border-bottom: 1px dotted var(--muted); transform: translateY(-4px); }
+        .dish .where { color: var(--muted); font-size: 0.9rem; }
+        .nextprev { display: flex; justify-content: space-between; gap: 1rem; padding-top: 2rem; }
+        @media (max-width: 640px) { .country-hero { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <header data-site-head="travel"></header>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <filter id="stamp-ink"><feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" seed="5" result="n"/>
+            <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -6 4.6" result="holes"/>
+            <feComposite in="SourceGraphic" in2="holes" operator="in"/></filter>
+    </svg>
+
+    <main class="page" id="country">
+        <a class="back" href="index.html">← All countries</a>
+    </main>
+    <footer class="site-foot"><span>© <span data-year></span> Natalie Voo</span><a href="../index.html">Home</a></footer>
+
+    <script src="../assets/stickers.js"></script>
+    <script src="../assets/site.js"></script>
+    <script src="../data/travel.js"></script>
+    <script>
+        const { esc, tally, stars, sample, param } = SITE;
+        const all = (window.TRAVEL || []).slice().sort((a, b) => a.name.localeCompare(b.name));
+        const i = all.findIndex((c) => c.id === param('c'));
+        const main = document.getElementById('country');
+        if (i < 0) {
+            main.insertAdjacentHTML('beforeend', '<div class="page-head"><h1>Not stamped yet</h1><p>There is no country with that name in data/travel.js.</p></div>');
+        } else {
+            const c = all[i], prev = all[(i - 1 + all.length) % all.length], next = all[(i + 1) % all.length];
+            document.title = `${c.name} · Natalie Voo`;
+            main.insertAdjacentHTML('beforeend', `
+                <div class="country-hero">
+                    <div>
+                        <span class="native" aria-hidden="true">${esc(c.native)}</span>
+                        <h1>${esc(c.name)}${sample(c)}</h1>
+                        <p>${esc(c.line)}</p>
+                        <div class="facts"><span>First visit ${esc(c.firstVisit)}</span><span>${c.visits} ${c.visits === 1 ? 'visit' : 'visits'}</span>${tally(c.visits)}</div>
+                    </div>
+                </div>
+                <section class="section">
+                    <div class="section-head"><h2>Highlights</h2></div>
+                    <div class="prints">${(c.highlights || []).map((h, k) => `
+                        <article class="print" style="--tilt:${k % 2 ? 1.5 : -1.5}deg">
+                            <div class="photo">${h.image ? `<img src="../${esc(h.image)}" alt="">` : 'photo goes here'}</div>
+                            <h3>${esc(h.title)}</h3><p>${esc(h.text)}</p>
+                        </article>`).join('') || '<p class="empty">No highlights yet.</p>'}</div>
+                </section>
+                <section class="section">
+                    <div class="menu taped">
+                        <span class="zh" aria-hidden="true">好吃</span>
+                        <h2>Where to eat</h2>
+                        ${(c.restaurants || []).map((r) => `
+                            <div class="dish">
+                                <div class="row"><b>${esc(r.name)}</b><i></i>${stars(r.stars || 0)}</div>
+                                <div class="where">${esc(r.city)} · Order: ${esc(r.dish)}</div>
+                                <div>${esc(r.note)}</div>
+                            </div>`).join('') || '<p class="empty">No restaurants yet.</p>'}
+                    </div>
+                </section>
+                <nav class="nextprev" aria-label="Other countries">
+                    <a class="back" href="country.html?c=${encodeURIComponent(prev.id)}">← ${esc(prev.name)}</a>
+                    <a class="back" href="country.html?c=${encodeURIComponent(next.id)}">${esc(next.name)} →</a>
+                </nav>`);
+        }
+    </script>
+    <script>document.querySelectorAll('[data-year]').forEach((el) => { el.textContent = new Date().getFullYear(); });</script>
+</body>
+</html>

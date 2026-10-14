@@ -12,16 +12,28 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
     <!-- The brush font, cut down to just the characters the site uses -->
-    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&text=邬欣汝印旅读写作生你好&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+    <!-- The seal: 鄔, the traditional form of my surname, which the simplified brush fonts don't carry -->
+    <link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@700&text=鄔&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/base.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <header data-site-head="minimal"></header>
     <!-- The painting: ink that stays (paint) and ripples that fade (water) -->
     <canvas id="paint" aria-hidden="true"></canvas>
     <canvas id="water" aria-hidden="true"></canvas>
 
     <!-- Wet ink: roughens the stroke edges, then softens and firms them up again -->
     <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+        <!-- An old stone seal: a few flecks where the ink didn't take, and slightly uneven edges -->
+        <filter id="worn" x="-5%" y="-5%" width="110%" height="110%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="speck"/>
+            <feColorMatrix in="speck" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -14 10.4" result="holes"/>
+            <feComposite in="SourceGraphic" in2="holes" operator="in" result="pitted"/>
+            <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="9" result="edge"/>
+            <feDisplacementMap in="pitted" in2="edge" scale="2.2"/>
+        </filter>
         <filter id="sumi" x="-5%" y="-5%" width="110%" height="110%">
             <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="4" result="grain"/>
             <feDisplacementMap in="SourceGraphic" in2="grain" scale="14" result="rough"/>
@@ -33,7 +45,7 @@
     <header class="hero">
         <div class="name-row">
             <h1 class="hanzi" data-hanzi="邬欣汝" aria-label="邬欣汝, Natalie Voo"></h1>
-            <div class="seal" aria-hidden="true"><span>邬</span><span>欣</span><span>汝</span><span>印</span></div>
+            <svg class="seal" viewBox="0 0 100 100" aria-hidden="true"><g filter="url(#worn)"><rect x="4" y="4" width="92" height="92" rx="4" class="seal-stone"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" class="seal-zi">鄔</text></g></svg>
         </div>
         <p class="latin">Natalie Voo</p>
         <p class="greet" aria-live="off"><span class="greet-word">Hello</span></p>
@@ -45,31 +57,41 @@
             <p class="lede">I work with data, build small things on the side, and collect places, books and languages along the way.</p>
         </section>
 
+        <figure class="horse-band bleed">
+            <canvas data-char-horse role="img" aria-label="A horse galloping, drawn in Chinese characters for horse, gallop, fire and wind"></canvas>
+            <figcaption>丙午 · 2026 is the year of the fire horse, and the horse is my sign.</figcaption>
+        </figure>
+
         <nav class="doors bleed" aria-label="Sections">
-            <a class="door" aria-disabled="true">
+            <a class="door" href="travel/index.html">
                 <span class="door-zi" aria-hidden="true">旅</span>
                 <span class="door-title">Travel</span>
-                <span class="door-soon">Soon</span>
+                <span class="door-soon" aria-hidden="true">→</span>
             </a>
-            <a class="door" aria-disabled="true">
+            <a class="door" href="reading/index.html">
                 <span class="door-zi" aria-hidden="true">读</span>
                 <span class="door-title">Reading</span>
-                <span class="door-soon">Soon</span>
+                <span class="door-soon" aria-hidden="true">→</span>
             </a>
-            <a class="door" aria-disabled="true">
+            <a class="door" href="writing/index.html">
                 <span class="door-zi" aria-hidden="true">写</span>
                 <span class="door-title">Writing</span>
-                <span class="door-soon">Soon</span>
+                <span class="door-soon" aria-hidden="true">→</span>
             </a>
-            <a class="door" aria-disabled="true">
+            <a class="door" href="projects/index.html">
                 <span class="door-zi" aria-hidden="true">作</span>
                 <span class="door-title">Projects</span>
-                <span class="door-soon">Soon</span>
+                <span class="door-soon" aria-hidden="true">→</span>
             </a>
-            <a class="door" aria-disabled="true">
+            <a class="door" href="life/index.html">
                 <span class="door-zi" aria-hidden="true">生</span>
                 <span class="door-title">Life</span>
-                <span class="door-soon">Soon</span>
+                <span class="door-soon" aria-hidden="true">→</span>
+            </a>
+            <a class="door door-play" href="play/index.html">
+                <span class="door-zi" aria-hidden="true">玩</span>
+                <span class="door-title">Chase the chickens</span>
+                <span class="door-soon" aria-hidden="true">→</span>
             </a>
         </nav>
     </main>
@@ -86,6 +108,9 @@
     </footer>
 
 
+    <script src="assets/stickers.js"></script>
+    <script src="assets/site.js"></script>
     <script src="script.js"></script>
+    <script src="assets/char-horse.js"></script>
 </body>
 </html>

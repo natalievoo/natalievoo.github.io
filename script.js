@@ -174,7 +174,7 @@ function splash(x, y) {
     ripple(x, y, 1.3);
 }
 window.addEventListener('pointerdown', (e) => {
-    if (e.target.closest('a, button')) return;
+    if (e.target.closest('a, button, .sticker, .tin')) return;
     splash(e.clientX, e.clientY);
 });
 
