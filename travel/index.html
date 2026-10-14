@@ -43,7 +43,7 @@
         .stamp .tallies { margin-top: 0.3rem; font-size: 1.1rem; }
         .stamp .sample { margin-top: 0.3rem; justify-self: center; }
         /* The map: the world sketched in blue pen, visited countries hatched in red marker */
-        .map-sheet { position: relative; padding: 1rem; background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); }
+        .map-sheet { position: relative; }
         .map-sheet svg { display: block; width: 100%; height: auto; }
         .land { fill: rgb(61 82 181 / 0.04); stroke: var(--pen, #3d52b5); stroke-width: 0.6; stroke-linejoin: round; }
         .land.visited { fill: url(#hatch); stroke: #b3362b; stroke-width: 1.1; cursor: pointer; }
@@ -83,7 +83,7 @@
         <div class="totals" id="totals"></div>
         <section class="section">
             <div class="section-head"><h2>The map</h2><p>hover me ↓</p></div>
-            <div class="map-sheet taped" style="--tape-tilt:-3deg" id="map"><p class="map-note">Sketching the map…</p></div>
+            <div class="window blue" data-title="the world, so far"><div class="map-sheet" id="map"><p class="map-note">Sketching the map…</p></div></div>
         </section>
         <section class="section">
             <div class="section-head"><h2>Countries</h2><div class="chips" id="regions" role="group" aria-label="Filter by region"></div></div>

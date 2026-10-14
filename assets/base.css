@@ -256,3 +256,63 @@ body.sketchbook::before {
 .sketchbook .button { background: var(--pen); }
 .sketchbook .button:hover { background: var(--ink); }
 .sketchbook .sample { color: var(--pen); }
+
+/* ═══ Looser: the sketchbook stops behaving like an app ═══ */
+:root { --scribble: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 40' preserveAspectRatio='none'%3E%3Cpath d='M8 22 C6 8 40 3 62 5 C86 7 97 14 94 24 C91 35 58 38 34 36 C14 34 4 28 9 17 C12 11 22 8 30 7' fill='none' stroke='%233d52b5' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E"); }
+
+/* Nav: the current page is circled in pen, not filled in */
+.sketchbook .site-nav a[aria-current="page"] { background: var(--scribble) center / 100% 100% no-repeat; color: var(--pen); }
+.sketchbook .site-nav a:hover { background: transparent; color: var(--pen); transform: rotate(-3deg); }
+.sketchbook .site-nav a { transition: transform 0.25s var(--ease-back), color 0.2s; }
+
+/* Filters: handwritten words; the chosen one gets circled */
+.sketchbook .chip {
+    border: 0; border-radius: 0; background: transparent; padding: 0.15rem 0.7rem;
+    font: 500 1.4rem/1.1 var(--hand); color: var(--ink-soft); transition: transform 0.2s var(--ease-back);
+}
+.sketchbook .chip:hover { background: transparent; transform: rotate(-4deg); color: var(--pen); }
+.sketchbook .chip[aria-pressed="true"] { background: var(--scribble) center / 100% 100% no-repeat; color: var(--pen); border: 0; }
+
+/* Buttons: a handwritten link with a pen underline */
+.sketchbook .button {
+    color: var(--pen); padding: 0.1rem 0.2rem 0.35rem; border-radius: 0; box-shadow: none; transform: none;
+    font: 500 1.45rem/1.1 var(--hand);
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 8' preserveAspectRatio='none'%3E%3Cpath d='M2 5 C30 2 60 7 98 3' fill='none' stroke='%233d52b5' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") left bottom / 100% 7px no-repeat;
+}
+.sketchbook .button:hover { color: var(--ink); transform: rotate(-2deg); }
+.sketchbook .button:active { transform: none; }
+
+/* Section headings: a scribbled aside next to the title, not a ruled bar */
+.sketchbook .section-head { justify-content: flex-start; align-items: flex-end; gap: 0.5rem 1.5rem; }
+.sketchbook .section-head h2 { font-size: clamp(1.9rem, 4vw, 2.4rem); font-style: italic; font-weight: 500; }
+.sketchbook .section-head > p { transform: rotate(-3deg) translateY(-0.4rem); }
+.sketchbook .section-head .chips { margin-left: auto; }
+
+/* Sheets: taped onto the page, labelled in pen. Drag one by its tape to move it */
+.window { position: relative; background: var(--card); box-shadow: 0 1px 2px rgb(31 42 48 / 0.06), 0 12px 28px -10px rgb(31 42 48 / 0.18); margin-top: 1.6rem; }
+.win-bar { position: absolute; left: 0; right: 0; top: -1.6rem; height: 1.6rem; pointer-events: none; }
+.win-name { position: absolute; right: 0.25rem; bottom: 0.15rem; font: 500 1.25rem/1 var(--hand); color: var(--pen); transform: rotate(-2deg); }
+.win-tape {
+    position: absolute; left: 50%; bottom: -0.75rem; width: 84px; height: 24px; transform: translateX(-50%) rotate(-3deg);
+    background: var(--tape); mix-blend-mode: multiply; pointer-events: auto; cursor: grab;
+    clip-path: polygon(3% 0, 97% 4%, 100% 50%, 96% 100%, 2% 96%, 0 50%);
+}
+.win-tape:active { cursor: grabbing; }
+.win-body { padding: 1rem; }
+.window.lifted { z-index: 25; box-shadow: 0 2px 4px rgb(31 42 48 / 0.08), 0 24px 40px -12px rgb(31 42 48 / 0.28); }
+
+/* Things on a desk sit at slight angles */
+.sketchbook .tilt-l { transform: rotate(-1.2deg); }
+.sketchbook .tilt-r { transform: rotate(1deg); }
+@keyframes wiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-4deg); } 75% { transform: rotate(4deg); } }
+
+/* Pen sparkles that trail the cursor */
+.sparkle { position: fixed; z-index: 60; pointer-events: none; font: 500 1rem/1 var(--hand); color: var(--pen); transform: translate(-50%, -50%); animation: sparkle 0.7s var(--ease-out) forwards; }
+@keyframes sparkle { to { opacity: 0; transform: translate(-50%, -50%) translateY(10px) scale(0.6) rotate(40deg); } }
+
+@media (prefers-reduced-motion: reduce) { .sparkle { display: none; } }
+.sketchbook .spine, .sketchbook .spine:hover { color: #fbf6ec; }
+/* Two-way switches: handwritten, the chosen side circled */
+.sketchbook .switch { background: none; padding: 0; gap: 0.2rem; }
+.sketchbook .switch button { font: 500 1.4rem/1.1 var(--hand); color: var(--ink-soft); padding: 0.15rem 0.7rem; border-radius: 0; }
+.sketchbook .switch button[aria-pressed="true"] { background: var(--scribble) center / 100% 100% no-repeat; box-shadow: none; color: var(--pen); }

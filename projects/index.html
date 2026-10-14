@@ -45,7 +45,11 @@
         .show-final .flip-in { transform: rotateY(180deg); }
         .card:hover .flip-in { transform: rotateY(12deg); }
         .show-final .card:hover .flip-in { transform: rotateY(168deg); }
-        .card h2 { font-size: 1.6rem; }
+        .card:nth-child(odd) .flip { transform: rotate(-1.6deg); } .card:nth-child(3n) .flip { transform: rotate(1.4deg); }
+        .card .flip { transition: transform 0.35s var(--ease-back); }
+        .card:hover .flip { transform: rotate(0) translateY(-4px); }
+        .flip-in > div { box-shadow: 0 14px 26px -12px rgb(31 42 48 / 0.3) !important; }
+        .card h2 { font-size: 1.6rem; font-style: italic; font-weight: 500; }
         .card p { color: var(--ink-soft); font-size: 0.97rem; }
         .card .top { display: flex; justify-content: space-between; gap: 0.5rem; align-items: center; }
         @media (prefers-reduced-motion: reduce) { .flip-in { transition: none; } .card:hover .flip-in { transform: none; } .show-final .card:hover .flip-in { transform: rotateY(180deg); } }

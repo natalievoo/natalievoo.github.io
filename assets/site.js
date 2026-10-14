@@ -306,6 +306,49 @@
     btn?.addEventListener('click', () => (tin ? closeTin() : openTin()));
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && tin) closeTin(); });
 
+    // ─── Windows ───
+    // <div class="window" data-title="todo.txt"> gets a title bar, and can be dragged around by it
+    document.querySelectorAll('.window[data-title]').forEach((win) => {
+        const body = document.createElement('div');
+        body.className = 'win-body';
+        while (win.firstChild) body.append(win.firstChild);
+        win.innerHTML = `<div class="win-bar"><span class="win-tape" title="Drag me"></span><span class="win-name">${esc(win.dataset.title)}</span></div>`;
+        win.append(body);
+        const bar = win.querySelector('.win-tape');
+        let dx = 0, dy = 0;
+        bar.addEventListener('pointerdown', (e) => {
+            if (e.pointerType !== 'mouse' || e.button !== 0) return; // on touch, the page scrolls as normal
+            e.preventDefault();
+            const sx = e.clientX - dx, sy = e.clientY - dy;
+            win.classList.add('lifted');
+            const move = (ev) => { dx = ev.clientX - sx; dy = ev.clientY - sy; win.style.translate = `${dx}px ${dy}px`; };
+            const up = () => { win.classList.remove('lifted'); removeEventListener('pointermove', move); removeEventListener('pointerup', up); };
+            addEventListener('pointermove', move);
+            addEventListener('pointerup', up);
+        });
+        // Double-click the bar to put it back where it was
+        bar.addEventListener('dblclick', () => { dx = dy = 0; win.style.translate = ''; });
+    });
+
+    // ─── Pen sparkles behind the cursor (sketchbook pages, mouse only) ───
+    if (document.body.classList.contains('sketchbook') && !reduce) {
+        const MARKS = ['✦', '·', '✧', '+', '⋆'];
+        let last = 0, live = 0;
+        addEventListener('pointermove', (e) => {
+            if (e.pointerType !== 'mouse' || live > 14) return;
+            const now = performance.now();
+            if (now - last < 70) return;
+            last = now;
+            const m = document.createElement('span');
+            m.className = 'sparkle'; m.setAttribute('aria-hidden', 'true');
+            m.textContent = MARKS[(Math.random() * MARKS.length) | 0];
+            // Snapped to the graph paper's grid
+            m.style.left = `${Math.round(e.clientX / 12) * 12}px`; m.style.top = `${Math.round(e.clientY / 12) * 12}px`;
+            document.body.append(m); live++;
+            m.addEventListener('animationend', () => { m.remove(); live--; });
+        });
+    }
+
     // Stickers wait for fonts (福 and 中 are drawn with them) and the page's own layout
     const restore = () => load().forEach((s) => { const el = makeSticker(s.id, s.x, s.y, s.rot); if (el) el.dataset.placed = '1'; });
     (document.fonts?.ready || Promise.resolve()).then(restore);
