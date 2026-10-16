@@ -174,7 +174,7 @@ function splash(x, y) {
     ripple(x, y, 1.3);
 }
 window.addEventListener('pointerdown', (e) => {
-    if (e.target.closest('a, button, .sticker, .tin')) return;
+    if (e.target.closest('a, button, .sticker, .tin, .scroll, .dock, .bar')) return;
     splash(e.clientX, e.clientY);
 });
 
@@ -528,4 +528,4 @@ document.querySelectorAll('.bleed').forEach((el) => seen.observe(el));
 landscape();
 // If the browser drops the canvas (low memory, GPU reset), paint new mountains
 paint.addEventListener('contextrestored', () => { paper(); landscape(); });
-document.querySelector('[data-year]').textContent = new Date().getFullYear();
+const yr = document.querySelector('[data-year]'); if (yr) yr.textContent = new Date().getFullYear();

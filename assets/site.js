@@ -1,6 +1,5 @@
-// Shared by every page: the header, the sticker tin, and small helpers.
-// Pages say what they need with <header data-site-head="travel"> (the current
-// section) or data-site-head="minimal" (just the sticker tin, for the homepage).
+// Small helpers every script uses (SITE), and the sticker tin: stickers you peel off
+// a sheet and press onto the wall. They stay where each visitor put them, in their own browser.
 (() => {
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
     // Where the site starts, worked out from this script's own address, so links work from any folder
@@ -31,35 +30,6 @@
     const SEAL = `<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="4" y="4" width="92" height="92" rx="5" fill="#b3362b"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" font-family="'LXGW WenKai TC', KaiTi, serif" font-weight="700" font-size="74" fill="#f4efe4">鄔</text></svg>`;
     const TIN = `<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="9" width="26" height="19" rx="4" fill="#c8352b"/><rect x="2" y="6" width="28" height="6" rx="3" fill="#8f1f1a"/><circle cx="12" cy="19" r="3.4" fill="#f2c14e"/><rect x="18" y="16" width="7" height="6" rx="1.5" fill="#fbefdc" transform="rotate(12 21 19)"/></svg>`;
 
-    // ─── Header ───
-    const head = document.querySelector('[data-site-head]');
-    if (head) {
-        const current = head.dataset.siteHead;
-        head.classList.add('site-head');
-        // Past the homepage, the site is a sketchbook: graph paper, ballpoint, pixel-set headings
-        if (head.dataset.siteHead !== 'minimal') {
-            document.body.classList.add('sketchbook');
-            document.body.insertAdjacentHTML('afterbegin', `<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-                <filter id="pixel-type" x="0" y="0" width="100%" height="100%">
-                    <feFlood x="1" y="1" width="1.6" height="1.6"/><feComposite width="3" height="3"/><feTile result="dots"/>
-                    <feComposite in="SourceGraphic" in2="dots" operator="in"/><feMorphology operator="dilate" radius="1.5"/>
-                </filter>
-                <filter id="pencil-wobble"><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="5"/></filter>
-            </svg>`);
-        }
-        if (current === 'minimal') {
-            head.classList.add('minimal');
-            head.innerHTML = `<button class="tin-btn" type="button" aria-expanded="false">${TIN}<span>Stickers</span></button>`;
-        } else {
-            head.innerHTML = `
-                <a class="home-seal" href="${root}index.html" aria-label="Home">${SEAL}</a>
-                <nav class="site-nav" aria-label="Sections">
-                    ${SECTIONS.map(([id, zi, label]) => `<a href="${root}${id}/index.html"${id === current ? ' aria-current="page"' : ''}><span aria-hidden="true">${zi}</span><span>${label}</span></a>`).join('')}
-                </nav>
-                <button class="tin-btn" type="button" aria-expanded="false">${TIN}<span>Stickers</span></button>`;
-        }
-    }
-
     // ─── Stickers ───
     // The white die-cut edge every sticker gets: grow the shape, fill it white, put the drawing on top
     document.body.insertAdjacentHTML('afterbegin', `<svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -77,7 +47,7 @@
     document.body.append(layer);
 
     // Stickers stay where each visitor put them, per page, in their own browser only
-    const KEY = `stickers:${location.pathname}`;
+    const KEY = 'stickers:studio';
     const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } };
     const save = () => {
         const list = [...layer.children].filter((el) => el.dataset.placed).map((el) => ({ id: el.dataset.id, x: +el.dataset.x, y: +el.dataset.y, rot: +el.dataset.rot }));
@@ -264,7 +234,7 @@
 
     // ─── The tin ───
     let tin = null;
-    const btn = head?.querySelector('.tin-btn');
+    const btn = document.querySelector('.tin-btn');
     const overTin = (ev) => tin && (() => { const r = tin.getBoundingClientRect(); return ev.clientX > r.left && ev.clientX < r.right && ev.clientY > r.top && ev.clientY < r.bottom; })();
     function openTin() {
         tin = document.createElement('div');
@@ -305,69 +275,6 @@
     }
     btn?.addEventListener('click', () => (tin ? closeTin() : openTin()));
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && tin) closeTin(); });
-
-    // ─── The honest footer line ───
-    const info = window.SITE_INFO;
-    if (info) document.querySelectorAll('[data-made]').forEach((el) => {
-        el.innerHTML = `made by hand (and with Claude), fuelled by ${esc(info.fuel)} · last updated ${date(info.updated)} · currently in ${esc(info.place)}`;
-    });
-
-    // ─── Page titles scramble in from Greek letters and characters ───
-    const h1 = document.querySelector('.sketchbook .page-head h1');
-    if (h1 && !reduce) {
-        const final = h1.textContent, POOL = 'αβγδεζηθλμξπσφψωABCDEFGHKLMNPRSTUVWXYZ马水鱼山风月';
-        const n = final.length, total = 26;
-        let f = 0;
-        const tick = () => {
-            f++;
-            h1.textContent = [...final].map((ch, i) => (ch === ' ' || i < (f / total) * n ? ch : POOL[(Math.random() * POOL.length) | 0])).join('');
-            if (f < total) requestAnimationFrame(tick); else h1.textContent = final;
-        };
-        requestAnimationFrame(tick);
-    }
-
-    // ─── Windows ───
-    // <div class="window" data-title="todo.txt"> gets a title bar, and can be dragged around by it
-    document.querySelectorAll('.window[data-title]').forEach((win) => {
-        const body = document.createElement('div');
-        body.className = 'win-body';
-        while (win.firstChild) body.append(win.firstChild);
-        win.innerHTML = `<div class="win-bar"><span class="win-tape" title="Drag me"></span><span class="win-name">${esc(win.dataset.title)}</span></div>`;
-        win.append(body);
-        const bar = win.querySelector('.win-tape');
-        let dx = 0, dy = 0;
-        bar.addEventListener('pointerdown', (e) => {
-            if (e.pointerType !== 'mouse' || e.button !== 0) return; // on touch, the page scrolls as normal
-            e.preventDefault();
-            const sx = e.clientX - dx, sy = e.clientY - dy;
-            win.classList.add('lifted');
-            const move = (ev) => { dx = ev.clientX - sx; dy = ev.clientY - sy; win.style.translate = `${dx}px ${dy}px`; };
-            const up = () => { win.classList.remove('lifted'); removeEventListener('pointermove', move); removeEventListener('pointerup', up); };
-            addEventListener('pointermove', move);
-            addEventListener('pointerup', up);
-        });
-        // Double-click the bar to put it back where it was
-        bar.addEventListener('dblclick', () => { dx = dy = 0; win.style.translate = ''; });
-    });
-
-    // ─── Pen sparkles behind the cursor (sketchbook pages, mouse only) ───
-    if (document.body.classList.contains('sketchbook') && !reduce) {
-        const MARKS = ['✦', '·', '✧', '+', '⋆'];
-        let last = 0, live = 0;
-        addEventListener('pointermove', (e) => {
-            if (e.pointerType !== 'mouse' || live > 14) return;
-            const now = performance.now();
-            if (now - last < 70) return;
-            last = now;
-            const m = document.createElement('span');
-            m.className = 'sparkle'; m.setAttribute('aria-hidden', 'true');
-            m.textContent = MARKS[(Math.random() * MARKS.length) | 0];
-            // Snapped to the graph paper's grid
-            m.style.left = `${Math.round(e.clientX / 12) * 12}px`; m.style.top = `${Math.round(e.clientY / 12) * 12}px`;
-            document.body.append(m); live++;
-            m.addEventListener('animationend', () => { m.remove(); live--; });
-        });
-    }
 
     // Stickers wait for fonts (福 and 中 are drawn with them) and the page's own layout
     const restore = () => load().forEach((s) => { const el = makeSticker(s.id, s.x, s.y, s.rot); if (el) el.dataset.placed = '1'; });

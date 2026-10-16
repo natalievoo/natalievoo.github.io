@@ -2,29 +2,24 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Natalie Voo 邬欣汝</title>
-    <meta name="description" content="Natalie Voo's personal website. Move your cursor to paint.">
+    <meta name="description" content="Natalie Voo's studio. Press a seal to unroll a scroll.">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
-    <!-- The brush font, cut down to just the characters the site uses -->
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Caveat:wght@500&family=Silkscreen&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
-    <!-- The seal: 鄔, the traditional form of my surname, which the simplified brush fonts don't carry -->
     <link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@700&text=鄔&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/base.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header data-site-head="minimal"></header>
     <!-- The painting: ink that stays (paint) and ripples that fade (water) -->
     <canvas id="paint" aria-hidden="true"></canvas>
     <canvas id="water" aria-hidden="true"></canvas>
 
-    <!-- Wet ink: roughens the stroke edges, then softens and firms them up again -->
     <svg width="0" height="0" aria-hidden="true" style="position:absolute">
         <!-- An old stone seal: a few flecks where the ink didn't take, and slightly uneven edges -->
         <filter id="worn" x="-5%" y="-5%" width="110%" height="110%">
@@ -34,67 +29,58 @@
             <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="9" result="edge"/>
             <feDisplacementMap in="pitted" in2="edge" scale="2.2"/>
         </filter>
+        <!-- Wet ink: roughens the stroke edges, then softens and firms them up again -->
         <filter id="sumi" x="-5%" y="-5%" width="110%" height="110%">
             <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="4" result="grain"/>
             <feDisplacementMap in="SourceGraphic" in2="grain" scale="14" result="rough"/>
             <feGaussianBlur in="rough" stdDeviation="2.2" result="soft"/>
             <feComponentTransfer in="soft"><feFuncA type="table" tableValues="0 0 0.9 0.95 1"/></feComponentTransfer>
         </filter>
+        <!-- A rubber stamp: ink that didn't take evenly -->
+        <filter id="stamp-ink"><feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" seed="5" result="n"/>
+            <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -6 4.6" result="holes"/>
+            <feComposite in="SourceGraphic" in2="holes" operator="in"/></filter>
+        <!-- Pencil and pen lines wobble a little -->
+        <filter id="wobble"><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="4"/></filter>
+        <filter id="pencil"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" seed="2" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.5"/></filter>
     </svg>
 
-    <header class="hero">
+    <!-- A thin line along the top of the room -->
+    <header class="bar">
+        <span class="bar-left"><span class="bar-seal" aria-hidden="true">鄔</span>Natalie Voo</span>
+        <span class="bar-right"><span data-clock></span> in the Netherlands</span>
+    </header>
+
+    <!-- The room: the name on the wall, written stroke by stroke -->
+    <section class="hero">
         <div class="name-row">
             <h1 class="hanzi" data-hanzi="邬欣汝" aria-label="邬欣汝, Natalie Voo"></h1>
             <svg class="seal" viewBox="0 0 100 100" aria-hidden="true"><g filter="url(#worn)"><rect x="4" y="4" width="92" height="92" rx="4" class="seal-stone"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" class="seal-zi">鄔</text></g></svg>
         </div>
         <p class="latin">Natalie Voo</p>
         <p class="greet" aria-live="off"><span class="greet-word">Hello</span></p>
-        <a class="scroll-hint" href="#about">Scroll</a>
-    </header>
+    </section>
 
-    <main>
-        <section id="about" class="intro bleed">
-            <p class="lede">I work with data, build small things on the side, and collect places, books and languages along the way.</p>
-            <p class="now-line" data-now></p>
-        </section>
+    <!-- The wall the scrolls hang on -->
+    <div class="wall" id="wall"></div>
 
-        <figure class="horse-band bleed">
-            <canvas data-char-horse role="img" aria-label="A horse galloping, drawn in Chinese characters for horse, gallop, fire and wind"></canvas>
-            <figcaption>丙午 · 2026 is the year of the fire horse, and the horse is my sign.</figcaption>
-        </figure>
+    <!-- The seals: press one and its scroll unrolls -->
+    <nav class="dock" aria-label="Sections"></nav>
 
-        <section class="desk-wrap bleed">
-            <p class="desk-hint">Things on my desk. Pick one up.</p>
-            <div class="desk" data-desk></div>
-        </section>
-    </main>
-
-    <footer class="foot">
-        <div class="pisces">
-            <svg class="fish" viewBox="-40 -40 80 80" aria-hidden="true">
-                <path class="cord" d="M-14 16 C-14 34, 14 34, 14 -16" />
-                <g class="fish-a"><path d="M-14 -24 C-6 -16 -6 2 -14 10 C-22 2 -22 -16 -14 -24 Z M-14 10 L-19 18 L-9 18 Z" /></g>
-                <g class="fish-b"><path d="M14 24 C6 16 6 -2 14 -10 C22 -2 22 16 14 24 Z M14 -10 L9 -18 L19 -18 Z" /></g>
-            </svg>
-        </div>
-        <p class="credit">© <span data-year></span> Natalie Voo</p>
-        <p class="credit made" data-made></p>
-    </footer>
-
+    <span hidden data-year></span>
 
     <script src="data/site.js"></script>
     <script src="data/about.js"></script>
+    <script src="data/travel.js"></script>
+    <script src="data/reading.js"></script>
+    <script src="data/writing.js"></script>
+    <script src="data/projects.js"></script>
+    <script src="data/life.js"></script>
     <script src="assets/stickers.js"></script>
     <script src="assets/site.js"></script>
+    <script src="assets/game.js"></script>
+    <script src="assets/apps.js"></script>
+    <script src="assets/studio.js"></script>
     <script src="script.js"></script>
-    <script src="assets/char-horse.js"></script>
-    <script src="assets/desk.js"></script>
-    <script src="assets/screensaver.js"></script>
-    <script>
-        // What I'm up to, from now.txt on the About page
-        const now = (window.ABOUT?.now || []).slice(0, 3);
-        const el = document.querySelector('[data-now]');
-        if (now.length) el.innerHTML = 'now: ' + now.map((n) => `${SITE.esc(n.label)} ${SITE.esc(n.text)}`).join(' · ') + (now.some((n) => n.sample) ? ' <span class="sample">sample</span>' : '');
-    </script>
 </body>
 </html>

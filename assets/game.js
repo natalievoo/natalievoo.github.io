@@ -1,13 +1,14 @@
 // Chasing chickens: a courtyard in the village, a girl, and chickens that will not be caught.
 // Everything is drawn at 200 × 125 pixels and scaled up whole, so every pixel stays crisp.
-(() => {
+window.ChickenGame = { unmount() {}, mount(root) {
     const W = 200, H = 125;
+    let mounted = true;
     const ROUND = 45; // seconds
-    const canvas = document.getElementById('game');
+    const canvas = root.querySelector('#game');
     const ctx = canvas.getContext('2d');
-    const stage = document.getElementById('stage');
+    const stage = root.querySelector('#stage');
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const $ = (s) => document.querySelector(s);
+    const $ = (s) => root.querySelector(s);
     const rand = (a, b) => a + Math.random() * (b - a);
 
     // ─── Sprites: one letter per pixel ───
@@ -262,6 +263,7 @@
     }
     // Speech bubbles are HTML on top of the canvas, so the characters stay sharp
     const bubbleLayer = $('#bubbles');
+    this.unmount = () => { mounted = false; running = false; target = null; };
     function renderBubbles() {
         bubbleLayer.innerHTML = bubbles.map((b) => {
             const a = Math.min(1, (b.life - b.t) / 0.3);
@@ -270,7 +272,7 @@
     }
 
     function loop(now) {
-        if (!running) return;
+        if (!running || !mounted) return;
         const dt = Math.min(0.05, (now - last) / 1000);
         last = now;
         step(dt);
@@ -282,14 +284,12 @@
     function start() {
         reset();
         $('#intro').hidden = true; $('#over').hidden = true;
-        document.body.classList.add('no-idle'); // the screensaver stays away while a round is on
         running = true; last = performance.now();
         canvas.focus();
         requestAnimationFrame(loop);
     }
     function end() {
         running = false; target = null;
-        document.body.classList.remove('no-idle');
         const prev = best();
         if (caught > prev) { try { localStorage.setItem(BEST, caught); } catch { /* fine */ } }
         $('#final').textContent = caught;
@@ -307,8 +307,8 @@
     // Fit the stage: the largest whole-number scale that fits the column
     function fit() {
         // Measured from the page column, minus the console's own frame (about 64px across)
-        const room = document.querySelector('main').clientWidth - 64;
-        const s = Math.max(1, Math.floor(Math.min(room / W, (innerHeight * 0.68) / H)));
+        const room = root.clientWidth - 40;
+        const s = Math.max(1, Math.floor(Math.min(room / W, (innerHeight * 0.45) / H)));
         canvas.style.width = `${W * s}px`; canvas.style.height = `${H * s}px`;
         stage.style.width = `${W * s}px`;
     }
@@ -320,11 +320,11 @@
     if (!reduce) {
         let idleLast = performance.now();
         const idle = (now) => {
-            if (running) return;
+            if (running || !mounted) return;
             const dt = Math.min(0.05, (now - idleLast) / 1000); idleLast = now;
             step(dt); render();
             requestAnimationFrame(idle);
         };
         requestAnimationFrame(idle);
     }
-})();
+} };
