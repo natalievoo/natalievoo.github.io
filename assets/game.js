@@ -307,13 +307,20 @@ window.ChickenGame = { unmount() {}, mount(root) {
     // Fit the stage: the largest whole-number scale that fits the column
     function fit() {
         // Measured from the page column, minus the console's own frame (about 64px across)
-        const room = root.clientWidth - 40;
-        const s = Math.max(1, Math.floor(Math.min(room / W, (innerHeight * 0.45) / H)));
+        // The tile shrinks to the game, so measure the column it sits in, not the tile
+        const col = root.closest('.col') || root.closest('.panel');
+        const room = Math.max(160, (col?.clientWidth || innerWidth) - 24);
+        const tall = (root.closest('.panel')?.clientHeight || innerHeight) - 260; // heading, lead and the dock
+        // On a phone a whole-number scale wastes half the width; allow halves there
+        const raw = Math.min(room / W, tall / H);
+        const s = raw < 2 ? Math.max(1, Math.floor(raw * 2) / 2) : Math.floor(raw);
         canvas.style.width = `${W * s}px`; canvas.style.height = `${H * s}px`;
         stage.style.width = `${W * s}px`;
     }
-    addEventListener('resize', fit);
+    const onResize = () => { if (mounted) fit(); else removeEventListener('resize', onResize); };
+    addEventListener('resize', onResize);
     fit();
+    requestAnimationFrame(fit); // once more after the panel has laid out
     // Show the yard behind the start screen, with the flock pecking about
     reset();
     render();

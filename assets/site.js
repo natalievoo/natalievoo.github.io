@@ -58,7 +58,7 @@
         el.dataset.x = x; el.dataset.y = y;
         el.style.left = `${x * 100}%`; el.style.top = `${y}px`;
     };
-    const pageW = () => document.documentElement.scrollWidth;
+    const pageW = () => innerWidth;
 
     // ─── The peel ───
     // A sticker is two layers: the front (the part still stuck down) and the flap (the part
@@ -112,7 +112,7 @@
     // Where a page point sits inside the sticker's own (rotated) square
     function local(el, pageX, pageY) {
         const r = el.getBoundingClientRect(), S = el.offsetWidth, k = +el.style.getPropertyValue('--s') || 1;
-        const cx = r.left + r.width / 2 + scrollX, cy = r.top + r.height / 2 + scrollY;
+        const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
         const a = -(+el.dataset.rot || 0) * Math.PI / 180, x = (pageX - cx) / k, y = (pageY - cy) / k;
         return [x * Math.cos(a) - y * Math.sin(a) + S / 2, x * Math.sin(a) + y * Math.cos(a) + S / 2];
     }
@@ -182,15 +182,15 @@
     function grab(e, el, fromTin) {
         e.preventDefault();
         const [x1, y1, x2, y2] = artBox(el), S = Math.max(x2 - x1, y2 - y1);
-        const C = edgePoint(el, local(el, e.pageX, e.pageY));
+        const C = edgePoint(el, local(el, e.clientX, e.clientY));
         let startRot = +el.dataset.rot || 0;
-        let free = false, offset = [0, 0], lastX = e.pageX, moved = 0;
-        const sx = e.pageX, sy = e.pageY;
+        let free = false, offset = [0, 0], lastX = e.clientX, moved = 0;
+        const sx = e.clientX, sy = e.clientY;
         layer.classList.add('busy');
         const move = (ev) => {
-            moved = Math.max(moved, Math.hypot(ev.pageX - sx, ev.pageY - sy));
+            moved = Math.max(moved, Math.hypot(ev.clientX - sx, ev.clientY - sy));
             if (!free) {
-                const p = local(el, ev.pageX, ev.pageY);
+                const p = local(el, ev.clientX, ev.clientY);
                 const pull = Math.hypot(p[0] - C[0], p[1] - C[1]);
                 setPeel(el, C, pull < 3 ? C : p);
                 if (pull > S * 0.62) {
@@ -200,15 +200,15 @@
                     if (el.dataset.landRot) { startRot = +el.dataset.landRot; el.dataset.rot = startRot; delete el.dataset.landRot; }
                     el.classList.add('lifted');
                     const r = el.getBoundingClientRect();
-                    offset = [ev.pageX - (r.left + r.width / 2 + scrollX), ev.pageY - (r.top + r.height / 2 + scrollY)];
+                    offset = [ev.clientX - (r.left + r.width / 2), ev.clientY - (r.top + r.height / 2)];
                     tween(160, easeOut, (u) => { offset = offset.map((o) => o * (1 - u)); setPeel(el, C, [p[0] + (C[0] - p[0]) * u, p[1] + (C[1] - p[1]) * u]); });
                 }
                 return;
             }
-            const lean = Math.max(-14, Math.min(14, (ev.pageX - lastX) * 1.5));
-            lastX = ev.pageX;
+            const lean = Math.max(-14, Math.min(14, (ev.clientX - lastX) * 1.5));
+            lastX = ev.clientX;
             el.style.setProperty('--rot', `${startRot + lean}deg`);
-            place(el, (ev.pageX - offset[0]) / pageW(), ev.pageY - offset[1]);
+            place(el, (ev.clientX - offset[0]) / pageW(), ev.clientY - offset[1]);
         };
         const up = (ev) => {
             window.removeEventListener('pointermove', move);
@@ -218,7 +218,7 @@
             if (!free) {
                 if (fromTin) { el.remove(); if (moved > 6) fromTin.dataset.dragged = '1'; return; }
                 // Not pulled far enough: the corner lies back down
-                tween(220, settle, (u) => { const p = local(el, ev.pageX, ev.pageY); setPeel(el, C, [p[0] + (C[0] - p[0]) * Math.min(1, u), p[1] + (C[1] - p[1]) * Math.min(1, u)]); }).then(() => setPeel(el, C, C));
+                tween(220, settle, (u) => { const p = local(el, ev.clientX, ev.clientY); setPeel(el, C, [p[0] + (C[0] - p[0]) * Math.min(1, u), p[1] + (C[1] - p[1]) * Math.min(1, u)]); }).then(() => setPeel(el, C, C));
                 return;
             }
             if (fromTin) fromTin.dataset.dragged = '1';
@@ -234,33 +234,35 @@
 
     // ─── The tin ───
     let tin = null;
-    const btn = document.querySelector('.tin-btn');
-    const overTin = (ev) => tin && (() => { const r = tin.getBoundingClientRect(); return ev.clientX > r.left && ev.clientX < r.right && ev.clientY > r.top && ev.clientY < r.bottom; })();
+    const btn = () => document.querySelector('.tin-btn');
+    const overTin = (ev) => tin && (() => { const r = (tin.querySelector('.tin-body') || tin).getBoundingClientRect(); return ev.clientX > r.left && ev.clientX < r.right && ev.clientY > r.top && ev.clientY < r.bottom; })();
     function openTin() {
         tin = document.createElement('div');
         tin.className = 'tin';
         tin.setAttribute('role', 'dialog'); tin.setAttribute('aria-label', 'Sticker tin');
         tin.innerHTML = `
-            <h2>Sticker tin</h2>
-            <p>Peel a sticker off by its corner and stick it anywhere on the page. Lift it again to move it, or double-click to peel it off. They stay for you on this page.</p>
-            <div class="tin-grid">${STICKERS.map((s) => `<button class="tin-item" type="button" data-id="${s.id}" aria-label="Stick ${esc(s.name)}" title="${esc(s.name)}">${draw(s)}</button>`).join('')}</div>
-            <div class="tin-actions"><button type="button" data-clear>Peel all off</button><button type="button" data-close>Close</button></div>`;
+            <div class="tin-bar"><span class="tin-dots" aria-hidden="true"><i class="dot-close"></i><i></i><i></i></span><span class="tin-name">stickers.tin</span><button class="tin-x" type="button" data-close aria-label="Close the sticker tin">×</button></div>
+            <div class="tin-body">
+                <p>peel one off by a corner and press it anywhere. lift it again to move it; double-click to peel it off. they stay put for you.</p>
+                <div class="tin-grid">${STICKERS.map((s) => `<button class="tin-item" type="button" data-id="${s.id}" aria-label="Stick ${esc(s.name)}" title="${esc(s.name)}">${draw(s)}</button>`).join('')}</div>
+                <div class="tin-actions"><button type="button" data-clear>peel all off</button></div>
+            </div>`;
         document.body.append(tin);
-        btn?.setAttribute('aria-expanded', 'true');
+        btn()?.setAttribute('aria-expanded', 'true');
         tin.querySelector('[data-close]').addEventListener('click', closeTin);
         tin.querySelector('[data-clear]').addEventListener('click', () => [...layer.children].forEach((el, i) => setTimeout(() => peelOff(el), i * 70)));
         tin.querySelectorAll('.tin-item').forEach((item) => {
             // Keyboard or a plain tap: stick one somewhere in view
             item.addEventListener('click', () => {
                 if (item.dataset.dragged) { delete item.dataset.dragged; return; }
-                const el = makeSticker(item.dataset.id, 0.15 + Math.random() * 0.6, scrollY + innerHeight * (0.3 + Math.random() * 0.4), Math.round(Math.random() * 30 - 15));
+                const el = makeSticker(item.dataset.id, 0.15 + Math.random() * 0.6, innerHeight * (0.2 + Math.random() * 0.45), Math.round(Math.random() * 30 - 15));
                 stickDown(el);
             });
             // Pointer: a copy sits exactly over the one in the tin, and peels off the sheet with you
             item.addEventListener('pointerdown', (e) => {
                 if (e.button !== 0) return;
                 const r = item.getBoundingClientRect();
-                const el = makeSticker(item.dataset.id, (r.left + r.width / 2 + scrollX) / pageW(), r.top + r.height / 2 + scrollY, 0);
+                const el = makeSticker(item.dataset.id, (r.left + r.width / 2) / pageW(), r.top + r.height / 2, 0);
                 el.style.setProperty('--s', (r.width * 0.86 / 84).toFixed(3));
                 el.dataset.landRot = Math.round(Math.random() * 24 - 12); // the angle it takes once it's free
                 grab(e, el, item);
@@ -270,10 +272,10 @@
     }
     function closeTin() {
         tin?.remove(); tin = null;
-        btn?.setAttribute('aria-expanded', 'false');
-        btn?.focus();
+        btn()?.setAttribute('aria-expanded', 'false');
+        btn()?.focus();
     }
-    btn?.addEventListener('click', () => (tin ? closeTin() : openTin()));
+    document.addEventListener('click', (e) => { if (e.target.closest('.tin-btn')) (tin ? closeTin() : openTin()); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && tin) closeTin(); });
 
     // Stickers wait for fonts (福 and 中 are drawn with them) and the page's own layout

@@ -4,20 +4,20 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Natalie Voo 邬欣汝</title>
-    <meta name="description" content="Natalie Voo's studio. Press a seal to unroll a scroll.">
+    <meta name="description" content="Natalie Voo. Data, small things on the side, places, books and languages.">
+    <meta name="theme-color" content="#f7f7f5">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Caveat:wght@500&family=Silkscreen&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400;500&family=Silkscreen&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@700&text=鄔&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- The painting: ink that stays (paint) and ripples that fade (water) -->
-    <canvas id="paint" aria-hidden="true"></canvas>
+    <div class="grain" aria-hidden="true"></div>
     <canvas id="water" aria-hidden="true"></canvas>
 
     <svg width="0" height="0" aria-hidden="true" style="position:absolute">
@@ -29,44 +29,60 @@
             <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="9" result="edge"/>
             <feDisplacementMap in="pitted" in2="edge" scale="2.2"/>
         </filter>
-        <!-- Wet ink: roughens the stroke edges, then softens and firms them up again -->
+        <!-- Wet ink for the name's strokes -->
         <filter id="sumi" x="-5%" y="-5%" width="110%" height="110%">
             <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="4" result="grain"/>
             <feDisplacementMap in="SourceGraphic" in2="grain" scale="14" result="rough"/>
             <feGaussianBlur in="rough" stdDeviation="2.2" result="soft"/>
             <feComponentTransfer in="soft"><feFuncA type="table" tableValues="0 0 0.9 0.95 1"/></feComponentTransfer>
         </filter>
-        <!-- A rubber stamp: ink that didn't take evenly -->
-        <filter id="stamp-ink"><feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" seed="5" result="n"/>
-            <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -6 4.6" result="holes"/>
-            <feComposite in="SourceGraphic" in2="holes" operator="in"/></filter>
-        <!-- Pencil and pen lines wobble a little -->
-        <filter id="wobble"><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="4"/></filter>
+        <filter id="stamp-ink"><feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" seed="5" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -6 4.6" result="holes"/><feComposite in="SourceGraphic" in2="holes" operator="in"/></filter>
         <filter id="pencil"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" seed="2" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.5"/></filter>
+        <filter id="wobble"><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="3"/></filter>
     </svg>
 
-    <!-- A thin line along the top of the room -->
-    <header class="bar">
-        <span class="bar-left"><span class="bar-seal" aria-hidden="true">鄔</span>Natalie Voo</span>
-        <span class="bar-right"><span data-clock></span> in the Netherlands</span>
+    <header class="top-nav">
+        <a class="nav-left" href="#welcome" data-go="welcome"><span class="nav-seal" aria-hidden="true">鄔</span><span><span class="nav-name">Natalie Voo</span><br><span class="nav-role">data · small things · places</span></span></a>
+        <nav class="nav-right" aria-label="Elsewhere">
+            <a href="https://github.com/natalievoo" rel="noopener">GitHub</a>
+            <a href="https://substack.com/" rel="noopener" data-substack>Substack</a>
+            <a href="mailto:hello@natalievoo.com">Email</a>
+        </nav>
     </header>
 
-    <!-- The room: the name on the wall, written stroke by stroke -->
-    <section class="hero">
-        <div class="name-row">
-            <h1 class="hanzi" data-hanzi="邬欣汝" aria-label="邬欣汝, Natalie Voo"></h1>
-            <svg class="seal" viewBox="0 0 100 100" aria-hidden="true"><g filter="url(#worn)"><rect x="4" y="4" width="92" height="92" rx="4" class="seal-stone"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" class="seal-zi">鄔</text></g></svg>
-        </div>
-        <p class="latin">Natalie Voo</p>
-        <p class="greet" aria-live="off"><span class="greet-word">Hello</span></p>
-    </section>
+    <main class="main">
+        <!-- welcome: the name on the desk -->
+        <section class="panel active" id="panel-welcome" aria-label="Welcome">
+            <div class="hero">
+                <div class="hero-stage">
+                    <div class="hero-wing l">
+                        <span class="hero-hello" data-hello>你好,</span>
+                        <span class="big">I make sense</span>
+                        <span class="small">of data, at koalitix, in the netherlands</span>
+                    </div>
+                    <div class="name-row">
+                        <h1 class="hanzi" data-hanzi="邬欣汝" aria-label="邬欣汝, Natalie Voo"></h1>
+                        <svg class="seal" viewBox="0 0 100 100" aria-hidden="true"><g filter="url(#worn)"><rect x="4" y="4" width="92" height="92" rx="4" class="seal-stone"/><text x="50" y="53" text-anchor="middle" dominant-baseline="central" class="seal-zi">鄔</text></g></svg>
+                    </div>
+                    <div class="hero-wing r">
+                        <span class="big">of things.</span>
+                        <span class="small">and collect places, books and languages on the side</span>
+                    </div>
+                    <p class="hero-sub">natalie voo · 邬欣汝 · 丙午, a horse</p>
+                </div>
+            </div>
+        </section>
+        <section class="panel" id="panel-about" aria-label="About"></section>
+        <section class="panel" id="panel-travel" aria-label="Travel"></section>
+        <section class="panel" id="panel-reading" aria-label="Reading"></section>
+        <section class="panel" id="panel-writing" aria-label="Writing"></section>
+        <section class="panel" id="panel-projects" aria-label="Projects"></section>
+        <section class="panel" id="panel-life" aria-label="Life"></section>
+        <section class="panel" id="panel-play" aria-label="Play"></section>
+    </main>
 
-    <!-- The wall the scrolls hang on -->
-    <div class="wall" id="wall"></div>
-
-    <!-- The seals: press one and its scroll unrolls -->
-    <nav class="dock" aria-label="Sections"></nav>
-
+    <nav class="dock" aria-label="Sections"><div class="dock-inner"></div></nav>
+    <p class="colophon" data-colophon></p>
     <span hidden data-year></span>
 
     <script src="data/site.js"></script>
@@ -80,7 +96,7 @@
     <script src="assets/site.js"></script>
     <script src="assets/game.js"></script>
     <script src="assets/apps.js"></script>
-    <script src="assets/studio.js"></script>
+    <script src="assets/panels.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

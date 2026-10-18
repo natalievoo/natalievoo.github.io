@@ -2,8 +2,7 @@ const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const rand = (a, b) => a + Math.random() * (b - a);
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// Ink colours from A Thousand Li of Rivers and Mountains, weighted so
-// plain ink is most common and ochre is rare
+// Ink colours, used by the ripples
 const PALETTE = [
     { c: [31, 42, 48], w: 5 },      // ink
     { c: [47, 93, 140], w: 3 },     // azurite
@@ -18,207 +17,30 @@ const pickColour = () => {
 };
 const rgba = ([r, g, b], a) => `rgba(${r},${g},${b},${a})`;
 
-// ─── 1. The painting ───────────────────────────────────────────────
-// Two canvases: "paint" is the sheet of paper that keeps everything ever
-// drawn; "water" is redrawn every frame for ink still spreading and ripples.
-// Ink is only pressed into the paper once a drop has finished spreading:
-// adding a sliver of colour every frame is too fine for the canvas to
-// store, and the colours drift.
-const paint = document.getElementById('paint');
+// ─── The water: koi surface now and then, ripples fade ─────────────
 const water = document.getElementById('water');
-const pctx = paint.getContext('2d', { alpha: false });
 const wctx = water.getContext('2d');
 let W = 0, H = 0, dpr = 1;
-
 function size() {
-    let snapshot = null;
-    if (W) { // W is 0 until the first sizing; a new canvas is 300px wide but blank
-        snapshot = document.createElement('canvas');
-        snapshot.width = paint.width; snapshot.height = paint.height;
-        snapshot.getContext('2d').drawImage(paint, 0, 0);
-    }
     dpr = Math.min(window.devicePixelRatio || 1, 2);
-    W = paint.clientWidth; H = paint.clientHeight;
-    for (const c of [paint, water]) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
-    pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    W = water.clientWidth; H = water.clientHeight;
+    water.width = Math.round(W * dpr); water.height = Math.round(H * dpr);
     wctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    // Keep the painting when the window changes size
-    if (snapshot) {
-        pctx.save(); pctx.setTransform(1, 0, 0, 1, 0, 0);
-        pctx.drawImage(snapshot, 0, 0, paint.width, paint.height);
-        pctx.restore();
-    } else {
-        paper();
-    }
-}
-
-// A fresh sheet: the paper colour plus a faint fibre grain
-function paper() {
-    pctx.fillStyle = '#f4efe4';
-    pctx.fillRect(0, 0, W, H);
-    const tile = document.createElement('canvas');
-    tile.width = tile.height = 160;
-    const t = tile.getContext('2d');
-    for (let i = 0; i < 2600; i++) {
-        t.fillStyle = `rgba(90,76,50,${rand(0.02, 0.07)})`;
-        t.fillRect(rand(0, 160), rand(0, 160), rand(0.5, 1.6), rand(0.5, 1.6));
-    }
-    pctx.fillStyle = pctx.createPattern(tile, 'repeat');
-    pctx.fillRect(0, 0, W, H);
 }
 size();
-// Only on width changes: mobile toolbars change the height while scrolling
-window.addEventListener('resize', () => { if (paint.clientWidth !== W) size(); });
-
-// Smooth random 1D noise, for mountain ridges
-function noise() {
-    const pts = Array.from({ length: 32 }, Math.random);
-    return (x) => {
-        const i = Math.floor(x), f = x - i, u = f * f * (3 - 2 * f);
-        const a = pts[i & 31], b = pts[(i + 1) & 31];
-        return a + (b - a) * u;
-    };
-}
-
-// The brush: a centre stroke plus two thinner bristle strokes.
-// Fast moves make thin lines, slow ones pool ink.
-const brush = { col: pickColour(), x: 0, y: 0, mx: 0, my: 0, t: 0, active: false, travel: 0 };
-
-// A drop of ink: grows fast then slows (ease out) and its wobbly edge
-// creeps. The middle is darker than the rim, and once it stops it is
-// pressed into the paper with a faint dried edge.
-const drops = [];
-function drop(x, y, R, { alpha = 0.05, life = 2600, col = brush.col } = {}) {
-    if (drops.length > 260) drops.shift();
-    const harm = [2, 3, 5, 7].map((k) => ({ k, a: rand(0.02, 0.08) * (k < 4 ? 1.5 : 1), p: rand(0, 6.28), s: rand(-0.6, 0.6) }));
-    drops.push({ x, y, R, alpha, life: reduce ? 300 : life, col, harm, born: performance.now() });
-    wake();
-}
-function blob(ctx, d, r, t) {
-    ctx.beginPath();
-    for (let i = 0; i <= 40; i++) {
-        const th = (i / 40) * Math.PI * 2;
-        let m = 1;
-        for (const h of d.harm) m += h.a * Math.sin(h.k * th + h.p + h.s * t);
-        const px = d.x + Math.cos(th) * r * m, py = d.y + Math.sin(th) * r * m;
-        i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
-    }
-    ctx.closePath();
-}
-function ink(ctx, d, r, t) {
-    blob(ctx, d, r, t);
-    const g = ctx.createRadialGradient(d.x, d.y, 0, d.x, d.y, r * 1.1);
-    g.addColorStop(0, rgba(d.col, d.alpha * 2.2));
-    g.addColorStop(0.65, rgba(d.col, d.alpha * 1.4));
-    g.addColorStop(1, rgba(d.col, d.alpha * 0.9));
-    ctx.fillStyle = g;
-    ctx.fill();
-}
+window.addEventListener('resize', () => { size(); layPads(); });
+const brush = { col: pickColour() };
+let feeding = false;
+window.POND = { setFeeding(on) { feeding = on; document.body.classList.toggle('feeding', on); } };
 
 // Ripples on the water: flattened rings that spread and fade
 const ripples = [];
 function ripple(x, y, big = 1) {
     if (reduce) return;
-    ripples.push({ x, y, big, born: performance.now(), life: 1900 });
+    ripples.push({ x, y, big, born: performance.now(), life: 2400 });
     wake();
 }
 
-function stroke(x0, y0, cx, cy, x1, y1, w, col) {
-    const nx = -(y1 - y0), ny = x1 - x0, len = Math.hypot(nx, ny) || 1;
-    pctx.lineCap = 'butt'; // round caps overlap and leave beads where segments meet
-    for (let i = -1; i <= 1; i++) {
-        const off = i * w * 0.4, ox = (nx / len) * off, oy = (ny / len) * off;
-        pctx.strokeStyle = rgba(col, i === 0 ? 0.07 : 0.045);
-        pctx.lineWidth = i === 0 ? w : w * 0.4;
-        pctx.beginPath();
-        pctx.moveTo(x0 + ox, y0 + oy);
-        pctx.quadraticCurveTo(cx + ox, cy + oy, x1 + ox, y1 + oy);
-        pctx.stroke();
-    }
-}
-
-window.addEventListener('pointermove', (e) => {
-    if (e.pointerType === 'touch') return; // on touch, taps drop ink instead
-    const now = performance.now(), x = e.clientX, y = e.clientY;
-    const gap = now - brush.t;
-    if (!brush.active || gap > 700) {
-        // A pause lifts the brush; the next stroke picks up a new colour
-        if (brush.active) brush.col = pickColour();
-        Object.assign(brush, { active: true, x, y, mx: x, my: y, t: now, travel: 0 });
-        return;
-    }
-    const dist = Math.hypot(x - brush.x, y - brush.y);
-    if (dist < 2) return;
-    const speed = dist / Math.max(gap, 1);
-    const w = Math.max(1.2, 9 - speed * 4.5);
-    const mx = (brush.x + x) / 2, my = (brush.y + y) / 2;
-    stroke(brush.mx, brush.my, brush.x, brush.y, mx, my, w, brush.col);
-    brush.travel += dist;
-    // Ink pools only where the brush moves slowly
-    if (brush.travel > 24 && speed < 0.5) {
-        brush.travel = 0;
-        drop(x + rand(-4, 4), y + rand(-4, 4), rand(6, 12) + 26 / (1 + speed * 3), { alpha: 0.03, life: rand(1800, 3200) });
-    }
-    Object.assign(brush, { x, y, mx, my, t: now });
-});
-
-// A click drops a big splash of ink with a few spatters around it
-function splash(x, y) {
-    brush.col = pickColour();
-    const R = rand(45, 90);
-    drop(x, y, R, { alpha: 0.065, life: rand(2600, 3600) });
-    for (let i = 0, n = rand(4, 8) | 0; i < n; i++) {
-        const a = rand(0, 6.28), d = R * rand(1.15, 1.9);
-        drop(x + Math.cos(a) * d, y + Math.sin(a) * d, rand(3, 10), { alpha: 0.08, life: rand(900, 1600) });
-    }
-    ripple(x, y, 1.3);
-}
-window.addEventListener('pointerdown', (e) => {
-    if (e.target.closest('a, button, .sticker, .tin, .scroll, .dock, .bar')) return;
-    splash(e.clientX, e.clientY);
-});
-
-// Scrolling stirs the water, and now and then leaves a pale wash
-let lastY = window.scrollY, rippleAcc = 0, washAcc = 0;
-window.addEventListener('scroll', () => {
-    const d = Math.abs(window.scrollY - lastY);
-    lastY = window.scrollY; rippleAcc += d; washAcc += d;
-    if (rippleAcc > 160) { rippleAcc = 0; ripple(rand(0.1, 0.9) * W, rand(0.55, 0.95) * H, rand(0.7, 1.3)); }
-    if (washAcc > 520) { washAcc = 0; drop(rand(0, W), rand(0.3, 1) * H, rand(110, 200), { alpha: 0.016, life: rand(4000, 6000), col: pickColour() }); }
-}, { passive: true });
-
-// Mountains in the blue-green style of the scroll, different on every
-// visit, unrolled left to right when the page opens
-const land = { img: null, done: 0, start: 0, active: false };
-function landscape() {
-    const off = document.createElement('canvas');
-    off.width = paint.width; off.height = paint.height;
-    const c = off.getContext('2d');
-    c.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const layers = [
-        { base: 0.6, amp: 0.2, f: 1.6, col: [127, 179, 163], a: 0.17 },
-        { base: 0.72, amp: 0.15, f: 2.4, col: [61, 139, 125], a: 0.13 },
-        { base: 0.84, amp: 0.1, f: 3.2, col: [47, 93, 140], a: 0.11 },
-    ];
-    for (const L of layers) {
-        const n = noise(), shift = rand(0, 20);
-        const top = H * (L.base - L.amp);
-        c.beginPath(); c.moveTo(0, H);
-        for (let x = 0; x <= W + 4; x += 4) {
-            const u = (x / W) * L.f + shift;
-            const h = Math.pow(n(u) * 0.6 + n(u * 2.7 + 9) * 0.3 + n(u * 7 + 3) * 0.1, 1.4);
-            c.lineTo(x, H * L.base - H * L.amp * (h * 1.8 - 0.2));
-        }
-        c.lineTo(W, H); c.closePath();
-        // Mist at the foot of each ridge
-        const g = c.createLinearGradient(0, top, 0, H * (L.base + 0.22));
-        g.addColorStop(0, rgba(L.col, L.a));
-        g.addColorStop(1, rgba(L.col, 0));
-        c.fillStyle = g; c.fill();
-    }
-    Object.assign(land, { img: off, done: 0, start: performance.now(), active: true });
-    wake();
-}
 
 // Koi, Ghibli style: chubby, flat warm colours with one shadow tone and
 // a highlight, outlines tinted to the body, floaty see-through fins.
@@ -233,22 +55,25 @@ const kois = [];
 const pointer = { x: -1e4, y: -1e4 };
 window.addEventListener('pointermove', (e) => { pointer.x = e.clientX; pointer.y = e.clientY; });
 
-function spawnKoi() {
-    if (reduce || document.hidden || kois.length >= 2) return;
+function newKoi() {
+    if (reduce || kois.length >= 3) return null;
     const look = KOI[(Math.random() * KOI.length) | 0];
     const x = rand(0.12, 0.88) * W, y = rand(0.15, 0.88) * H;
-    kois.push({
+    const k = {
         x, y, look, L: rand(70, 100), heading: rand(0, 6.28), turn: rand(-0.3, 0.3),
-        speed: rand(28, 42), phase: rand(0, 6), born: performance.now(), life: rand(8000, 12000),
+        speed: rand(22, 36), phase: rand(0, 6), born: performance.now(), life: rand(26000, 40000),
         spots: Array.from({ length: look.spots.length ? rand(2, 4) | 0 : 0 }, () => ({
             u: rand(0.08, 0.7), side: rand(-0.5, 0.5), r: rand(0.08, 0.15),
             c: look.spots[(Math.random() * look.spots.length) | 0],
         })),
-    });
+        dive: 0,
+    };
+    kois.push(k);
     ripple(x, y, 0.6);
-    wake();
+    return k;
 }
-function scheduleKoi(delay = rand(6000, 13000)) {
+function spawnKoi() { if (document.hidden) return; if (newKoi()) wake(); }
+function scheduleKoi(delay = rand(5000, 9000)) {
     setTimeout(() => { spawnKoi(); scheduleKoi(); }, delay);
 }
 
@@ -256,6 +81,18 @@ const angleTo = (from, to) => ((to - from + Math.PI * 3) % (Math.PI * 2)) - Math
 function swim(k, dt) {
     k.turn = Math.max(-0.6, Math.min(0.6, k.turn + rand(-1, 1) * dt * 0.8));
     let speed = k.speed;
+    // Food nearby: swim to the nearest crumb and eat it
+    let near = null, nd = 1e9;
+    for (const c of crumbs) { const d = Math.hypot(c.x - k.x, c.y - k.y); if (d < nd) { nd = d; near = c; } }
+    if (near) {
+        k.heading += angleTo(k.heading, Math.atan2(near.y - k.y, near.x - k.x)) * Math.min(1, dt * 4);
+        speed *= nd > 60 ? 2.6 : 1.2;
+        if (nd < 14) { crumbs.splice(crumbs.indexOf(near), 1); ripple(near.x, near.y, 0.25); }
+        k.phase += dt * speed * 0.03;
+        k.x += Math.cos(k.heading) * speed * dt; k.y += Math.sin(k.heading) * speed * dt;
+        keepInPond(k);
+        return;
+    }
     // Startled by the cursor: turn away and dart
     const dx = k.x - pointer.x, dy = k.y - pointer.y;
     if (Math.hypot(dx, dy) < 140) {
@@ -266,19 +103,21 @@ function swim(k, dt) {
     } else {
         k.startled = false;
     }
-    // Stay in the pond
-    if (k.x < 70 || k.x > W - 70 || k.y < 70 || k.y > H - 70) {
-        k.heading += angleTo(k.heading, Math.atan2(H / 2 - k.y, W / 2 - k.x)) * dt * 1.6;
-    }
+    if (k.dive && performance.now() - k.dive < 1500) speed *= 3; // fleeing a splash
+    keepInPond(k);
     k.heading += k.turn * dt;
     k.x += Math.cos(k.heading) * speed * dt;
     k.y += Math.sin(k.heading) * speed * dt;
     k.phase += dt * (3.5 + speed * 0.06);
 }
 
+function keepInPond(k) {
+    if (k.x < 70 || k.x > W - 70 || k.y < 70 || k.y > H - 70) k.heading += angleTo(k.heading, Math.atan2(H / 2 - k.y, W / 2 - k.x)) * 0.03;
+}
 function drawKoi(ctx, k, now) {
     const age = now - k.born;
-    const vis = Math.max(0, Math.min(1, age / 1100, (k.life - age) / 1400));
+    const diving = k.dive ? Math.max(0, 1 - Math.abs((now - k.dive) - 1500) / 1500) : 0; // down, then up again over 3s
+    const vis = Math.max(0, Math.min(1, age / 1100, (k.life - age) / 1400)) * (1 - diving * 0.92);
     const ev = vis * vis * (3 - 2 * vis);
     const L = k.L * (0.86 + 0.14 * ev);
     const N = 14, ch = Math.cos(k.heading), sh = Math.sin(k.heading);
@@ -372,7 +211,119 @@ function drawKoi(ctx, k, now) {
     ctx.restore();
 }
 
-// ─── The frame loop: runs only while something is moving ───
+// ─── The pond ───────────────────────────────────────────────────────
+// Pale blue water, light drifting on the surface, a few lily pads, specks floating by,
+// and the koi beneath.
+const PADS = [], SPECKS = [];
+function layPads() {
+    PADS.length = 0;
+    const n = W < 700 ? 3 : 5;
+    for (let i = 0; i < n; i++) {
+        const edge = i % 2 ? 'r' : 'l';
+        PADS.push({
+            x: edge === 'l' ? rand(0.02, 0.1) * W : rand(0.9, 0.98) * W, y: rand(0.1, 0.9) * H,
+            r: rand(26, 44), a: rand(0, 6.28), notch: rand(0.5, 0.9), tone: Math.random(),
+            bud: Math.random() < 0.35, drift: rand(0, 6.28),
+        });
+    }
+    SPECKS.length = 0;
+    for (let i = 0; i < 40; i++) SPECKS.push({ x: Math.random(), y: Math.random(), r: rand(0.6, 1.6), s: rand(0.004, 0.012), p: rand(0, 6.28) });
+}
+const CAUSTICS = Array.from({ length: 11 }, (_, i) => ({ x: Math.random(), y: Math.random(), rx: rand(0.12, 0.3), ry: rand(0.06, 0.16), s: rand(0.05, 0.12), p: rand(0, 6.28), i }));
+function drawPond(now) {
+    const t = now / 1000;
+    const g = wctx.createRadialGradient(W * 0.5, H * 0.3, 0, W * 0.5, H * 0.5, Math.max(W, H) * 0.85);
+    g.addColorStop(0, '#dff1f7'); g.addColorStop(0.55, '#c9e4ef'); g.addColorStop(1, '#a9d1e3');
+    wctx.fillStyle = g; wctx.fillRect(0, 0, W, H);
+    // light moving on the surface
+    for (const c of CAUSTICS) {
+        const x = (c.x + Math.sin(t * c.s + c.p) * 0.06) * W, y = (c.y + Math.cos(t * c.s * 0.8 + c.p) * 0.04) * H;
+        const rg = wctx.createRadialGradient(x, y, 0, x, y, c.rx * W);
+        const a = 0.09 + 0.04 * Math.sin(t * c.s * 3 + c.i);
+        rg.addColorStop(0, `rgba(255,255,250,${a})`); rg.addColorStop(0.5, `rgba(255,255,250,${a * 0.45})`); rg.addColorStop(1, 'rgba(255,255,250,0)');
+        wctx.fillStyle = rg;
+        wctx.save(); wctx.translate(x, y); wctx.scale(1, c.ry / c.rx); wctx.beginPath(); wctx.arc(0, 0, c.rx * W, 0, 6.283); wctx.fill(); wctx.restore();
+    }
+    // slow surface ripple lines, like a breath of wind
+    wctx.strokeStyle = 'rgba(255,255,255,0.22)'; wctx.lineWidth = 1.2;
+    for (let k = 0; k < 7; k++) {
+        const y0 = ((k / 7) + ((t * 0.01 + k * 0.13) % 1)) % 1 * H;
+        wctx.beginPath();
+        for (let x = 0; x <= W; x += 24) wctx.lineTo(x, y0 + Math.sin(x * 0.012 + t * 0.6 + k) * 5 + Math.sin(x * 0.03 - t * 0.4) * 2);
+        wctx.stroke();
+    }
+}
+function drawSpecks(now) {
+    const t = now / 1000;
+    wctx.fillStyle = 'rgba(255,255,255,0.45)';
+    for (const sp of SPECKS) {
+        const x = ((sp.x + t * sp.s) % 1) * W, y = (sp.y + Math.sin(t * 0.3 + sp.p) * 0.01) * H;
+        wctx.beginPath(); wctx.arc(x, y, sp.r, 0, 6.283); wctx.fill();
+    }
+}
+function drawPads(now) {
+    const t = now / 1000;
+    for (const p of PADS) {
+        const x = p.x + Math.sin(t * 0.18 + p.drift) * 4, y = p.y + Math.cos(t * 0.14 + p.drift) * 3;
+        wctx.save(); wctx.translate(x, y);
+        // the pad's shadow on the water
+        wctx.beginPath(); wctx.arc(3, 5, p.r, 0, 6.283); wctx.fillStyle = 'rgba(40,70,45,0.1)'; wctx.fill();
+        wctx.rotate(p.a);
+        wctx.beginPath(); wctx.moveTo(0, 0); wctx.arc(0, 0, p.r, p.notch * 0.5, 6.283 - p.notch * 0.5); wctx.closePath();
+        const pg = wctx.createRadialGradient(-p.r * 0.3, -p.r * 0.3, 0, 0, 0, p.r);
+        pg.addColorStop(0, p.tone < 0.5 ? '#9fbf9a' : '#8fb38c'); pg.addColorStop(1, p.tone < 0.5 ? '#6f9a6e' : '#5f8a60');
+        wctx.fillStyle = pg; wctx.fill();
+        wctx.strokeStyle = 'rgba(40,70,45,0.25)'; wctx.lineWidth = 1; wctx.stroke();
+        wctx.strokeStyle = 'rgba(40,70,45,0.18)'; wctx.lineWidth = 0.8;
+        for (let k = 0; k < 6; k++) { const a = p.notch * 0.5 + (6.283 - p.notch) * (k + 0.5) / 6; wctx.beginPath(); wctx.moveTo(0, 0); wctx.lineTo(Math.cos(a) * p.r * 0.92, Math.sin(a) * p.r * 0.92); wctx.stroke(); }
+        if (p.bud) { wctx.beginPath(); wctx.ellipse(p.r * 0.55, -p.r * 0.5, 5, 8, -0.4, 0, 6.283); wctx.fillStyle = '#f2bfc9'; wctx.fill(); wctx.beginPath(); wctx.ellipse(p.r * 0.55, -p.r * 0.5, 2.2, 5, -0.4, 0, 6.283); wctx.fillStyle = '#e48ea3'; wctx.fill(); }
+        wctx.restore();
+    }
+}
+
+// ─── Food: throw some in and the koi come ───
+const crumbs = [];
+function feed(x, y) {
+    for (let k = 0; k < 7; k++) crumbs.push({ x: x + rand(-18, 18), y: y + rand(-12, 12), born: performance.now(), life: rand(9000, 14000), vx: rand(-3, 3), vy: rand(-2, 2) });
+    ripple(x, y, 0.5);
+    // any koi that aren't here yet come up to see
+    while (kois.length < 3) { const k = newKoi(); if (!k) break; k.x = rand(0.1, 0.9) * W; k.y = rand(0.1, 0.9) * H; }
+    wake();
+}
+function drawCrumbs(now) {
+    for (let i = crumbs.length - 1; i >= 0; i--) {
+        const c = crumbs[i], age = now - c.born;
+        if (age > c.life) { crumbs.splice(i, 1); continue; }
+        c.x += c.vx * 0.016; c.y += c.vy * 0.016;
+        const a = Math.min(1, (c.life - age) / 1500);
+        wctx.fillStyle = `rgba(214,170,96,${0.9 * a})`; wctx.beginPath(); wctx.arc(c.x, c.y, 2.2, 0, 6.283); wctx.fill();
+        wctx.fillStyle = `rgba(255,240,200,${0.6 * a})`; wctx.beginPath(); wctx.arc(c.x - 0.6, c.y - 0.6, 0.8, 0, 6.283); wctx.fill();
+    }
+}
+
+// ─── A click on the water: a splash, and the fish dive ───
+const splashes = [];
+water.style.pointerEvents = 'none';
+document.addEventListener('pointerdown', (e) => {
+    // the welcome panel is the pond; other panels are paper over it
+    if (e.target.closest('a, button, .panel:not(#panel-welcome) .col, .tin, .sticker, .dock, .top-nav, input, textarea, .hero-wing, .name-row')) return;
+    if (feeding) { feed(e.clientX, e.clientY); return; }
+    ripple(e.clientX, e.clientY, 1.4);
+    ripple(e.clientX, e.clientY, 0.8);
+    for (let k = 0; k < 10; k++) splashes.push({ x: e.clientX, y: e.clientY, vx: rand(-90, 90), vy: rand(-160, -40), born: performance.now(), life: rand(400, 700) });
+    for (const k of kois) { const d = Math.hypot(k.x - e.clientX, k.y - e.clientY); if (d < 260) { k.dive = performance.now(); k.heading = Math.atan2(k.y - e.clientY, k.x - e.clientX); } }
+    wake();
+});
+function drawSplashes(now) {
+    for (let i = splashes.length - 1; i >= 0; i--) {
+        const s = splashes[i], t = (now - s.born) / s.life;
+        if (t >= 1) { splashes.splice(i, 1); continue; }
+        const x = s.x + s.vx * t * (s.life / 1000), y = s.y + s.vy * t * (s.life / 1000) + 300 * t * t * (s.life / 1000);
+        wctx.fillStyle = `rgba(255,255,255,${0.8 * (1 - t)})`; wctx.beginPath(); wctx.arc(x, y, 2.2 * (1 - t * 0.5), 0, 6.283); wctx.fill();
+    }
+}
+
+// ─── The frame loop: the pond is always moving, slowly ───
 let running = false, lastT = 0;
 function wake() {
     if (running) return;
@@ -382,38 +333,13 @@ function wake() {
 function frame(now) {
     const dt = Math.min(now - lastT, 50) / 1000;
     lastT = now;
-        if (land.active) {
-        const t = reduce ? 1 : Math.min(1, (now - land.start) / 2800);
-        const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-        const to = Math.round(e * land.img.width);
-        if (to > land.done) {
-            pctx.save(); pctx.setTransform(1, 0, 0, 1, 0, 0);
-            pctx.drawImage(land.img, land.done, 0, to - land.done, land.img.height, land.done, 0, to - land.done, land.img.height);
-            pctx.restore();
-            land.done = to;
-        }
-        if (t >= 1) land.active = false;
-    }
-
-    wctx.clearRect(0, 0, W, H);
+    drawPond(now);
+    drawCrumbs(now);
     for (let i = kois.length - 1; i >= 0; i--) {
         const k = kois[i];
         if (now - k.born >= k.life) { ripple(k.x, k.y, 0.5); kois.splice(i, 1); continue; }
         swim(k, dt);
         drawKoi(wctx, k, now);
-    }
-    for (let i = drops.length - 1; i >= 0; i--) {
-        const d = drops[i];
-        const t = Math.min(1, (now - d.born) / d.life);
-        if (t < 1) {
-            ink(wctx, d, d.R * (0.2 + 0.8 * (1 - Math.pow(1 - t, 3))), t);
-            continue;
-        }
-        ink(pctx, d, d.R, 1);
-        pctx.strokeStyle = rgba(d.col, d.alpha * 1.6);
-        pctx.lineWidth = 1.1;
-        pctx.stroke();
-        drops.splice(i, 1);
     }
 
     for (let i = ripples.length - 1; i >= 0; i--) {
@@ -422,18 +348,20 @@ function frame(now) {
         if (t >= 1) { ripples.splice(i, 1); continue; }
         const e = 1 - Math.pow(1 - t, 2);
         for (let k = 0; k < 3; k++) {
-            const rr = (e * 150 - k * 26) * r.big;
+            const rr = (e * 190 - k * 30) * r.big;
             if (rr <= 0) continue;
-            wctx.strokeStyle = rgba([31, 42, 48], 0.2 * (1 - t) * (1 - k * 0.3));
-            wctx.lineWidth = 1;
+            wctx.strokeStyle = `rgba(255,255,255,${0.7 * (1 - t) * (1 - k * 0.3)})`;
+            wctx.lineWidth = 1.6;
             wctx.beginPath();
             wctx.ellipse(r.x, r.y, rr, rr * 0.38, 0, 0, Math.PI * 2);
             wctx.stroke();
         }
     }
 
-    if (land.active || drops.length || ripples.length || kois.length) requestAnimationFrame(frame);
-    else running = false;
+    drawSpecks(now);
+    drawSplashes(now);
+    drawPads(now);
+    requestAnimationFrame(frame);
 }
 
 // ─── 2. The name, brushed stroke by stroke in real stroke order ────
@@ -461,6 +389,15 @@ async function drawName() {
         nameEl.classList.add('hanzi-text');
         return;
     }
+    // Stroke order comes from the data file (Make Me a Hanzi). If one character needs a
+    // different order, list it here as the file's stroke indexes in the order to draw them.
+    // 阝 in 邬: the stroke file has hook-then-vertical (the textbook order). Natalie writes the
+    // vertical first, so her name is written her way. Remove the entry to go back to the textbook.
+    const ORDER = { '邬': [0, 1, 2, 3, 5, 4] };
+    for (const [ci, ch] of chars.entries()) {
+        const o = ORDER[ch];
+        if (o && data[ci] && o.length === data[ci].strokes.length) data[ci] = { strokes: o.map((k) => data[ci].strokes[k]), medians: o.map((k) => data[ci].medians[k]) };
+    }
     let t = reduce ? 0 : 250; // a beat before the brush touches paper
     chars.forEach((ch, ci) => {
         const svg = svgEl('svg', { viewBox: '0 0 1024 1024', width: S, height: S, class: 'zi', 'aria-hidden': 'true' });
@@ -483,49 +420,23 @@ async function drawName() {
             let len = 0;
             for (let i = 1; i < med.length; i++) len += Math.hypot(med[i][0] - med[i - 1][0], med[i][1] - med[i - 1][1]);
             // A brush stroke: quick, eased in and out, longer strokes take a little longer
-            const dur = 40 + len * 0.16;
+            const dur = 70 + len * 0.22;
             line.animate([
                 { strokeDashoffset: 1, opacity: 0 },
                 { strokeDashoffset: 0.97, opacity: 1, offset: 0.03 },
                 { strokeDashoffset: 0, opacity: 1 },
             ], { duration: dur, delay: t, easing: 'cubic-bezier(.45, 0, .25, 1)', fill: 'both' });
-            t += dur + 20;
+            t += dur + 50;
         });
-        t += 90;
+        t += 180;
     });
     await wait(t);
 }
 drawName().finally(() => {
     document.body.classList.add('named');
-    scheduleKoi(2500);
-    setTimeout(startGreeting, 1600);
+    scheduleKoi(1200); setTimeout(spawnKoi, 2400);
 });
 
-// ─── 3. Hello in every language I speak ────────────────────────────
-const GREETINGS = ['Hello', 'Apa khabar', '你好', 'Hoi'];
-const greet = document.querySelector('.greet');
-const gWord = greet.querySelector('.greet-word');
-function startGreeting() {
-    let i = 0;
-    setInterval(async () => {
-        i = (i + 1) % GREETINGS.length;
-        greet.classList.add('out');
-        await wait(reduce ? 0 : 450);
-        gWord.textContent = GREETINGS[i];
-        greet.classList.remove('out');
-    }, 2800);
-}
-
-// ─── 4. Sections soak in as they scroll into view ──────────────────
-const seen = new IntersectionObserver((entries) => {
-    entries.forEach((e) => {
-        if (e.isIntersecting) { e.target.classList.add('in'); seen.unobserve(e.target); }
-    });
-}, { threshold: 0.15 });
-document.querySelectorAll('.bleed').forEach((el) => seen.observe(el));
-
-// ─── Start ─────────────────────────────────────────────────────────
-landscape();
-// If the browser drops the canvas (low memory, GPU reset), paint new mountains
-paint.addEventListener('contextrestored', () => { paper(); landscape(); });
+layPads();
+if (reduce) { drawPond(0); drawPads(0); } else wake();
 const yr = document.querySelector('[data-year]'); if (yr) yr.textContent = new Date().getFullYear();
